@@ -71,16 +71,18 @@ namespace captainalm.integrator
 			for (int j = 1; j < _rows; j++) {
 				var lstr = new List<List<IElement>>();
 				for (int k = 1; k < _blocks; k++) {
-					var lstb = new List<IElement>();
-					for (int l = 1; l < _blocktypes.Length - 1; l++) {
-						lstb.Add(null);
-					}
-					lstr.Add(lstb);
+					lstr.Add(generateBlock());
 				}
 				data.Add(lstr);
 			}
 		}
-
+		private List<IElement> generateBlock() {
+			var lstb = new List<IElement>();
+			for (int l = 0; l < _blocktypes.Length - 1; l++) {
+				lstb.Add(null);
+			}
+			return lstb;
+		}
 		#region IDisposable implementation
 		/// <summary>
 		/// Dispose of resources.
@@ -240,6 +242,121 @@ namespace captainalm.integrator
 				lock (slockop) {
 					data[Row][Block][Index] = value;
 				}
+			}
+		}
+		/// <summary>
+		/// Adds an Integration row.
+		/// </summary>
+		/// <remarks></remarks>
+		public void addRow() {
+			lock (slockop) {
+				var lstr = new List<List<IElement>>();
+				for (int k = 1; k < _blocks; k++) {
+					lstr.Add(generateBlock());
+				}
+				data.Add(lstr);
+				_rows += 1;
+			}
+		}
+		/// <summary>
+		/// Adds an Integration block.
+		/// </summary>
+		/// <remarks></remarks>
+		public void addBlock() {
+			lock (slockop) {
+				for (int k = 0; k < _rows - 1; k++) {
+					data[k].Add(generateBlock());
+				}
+				_blocks += 1;
+			}
+		}
+		/// <summary>
+		/// Insert an Integration row.
+		/// </summary>
+		/// <param name="index">The index to insert at</param>
+		/// <remarks></remarks>
+		public void insertRow(Int32 index) {
+			if (index < 0 || index > _rows - 1) {throw new ArgumentOutOfRangeException("index");}
+			lock (slockop) {
+				var lstr = new List<List<IElement>>();
+				for (int k = 1; k < _blocks; k++) {
+					lstr.Add(generateBlock());
+				}
+				data.Insert(index,lstr);
+				_rows += 1;
+			}
+		}
+		/// <summary>
+		/// Insert an Integration block.
+		/// </summary>
+		/// <param name="index">The index to insert at</param>
+		/// <remarks></remarks>
+		public void insertBlock(Int32 index) {
+			if (index < 0 || index > _blocks - 1) {throw new ArgumentOutOfRangeException("index");}
+			lock (slockop) {
+				for (int k = 0; k < _rows - 1; k++) {
+					data[k].Insert(index,generateBlock());
+				}
+				_blocks += 1;
+			}
+		}
+		/// <summary>
+		/// Remove the last Integration row.
+		/// </summary>
+		/// <remarks></remarks>
+		public void removeLastRow() {
+			lock (slockop) {
+				data.RemoveAt(_rows - 1);
+				_rows -= 1;
+			}
+		}
+		/// <summary>
+		/// Remove the last Integration block.
+		/// </summary>
+		/// <remarks></remarks>
+		public void removeLastBlock() {
+			lock (slockop) {
+				for (int k = 0; k < _rows - 1; k++) {
+					data[k].RemoveAt(_blocks - 1);
+				}
+				_blocks -= 1;
+			}
+		}
+		/// <summary>
+		/// Remove the specified Integration row.
+		/// </summary>
+		/// <param name="index">The row index</param>
+		/// <remarks></remarks>
+		public void removeRow(Int32 index) {
+			if (index < 0 || index > _rows - 1) {throw new ArgumentOutOfRangeException("index");}
+			lock (slockop) {
+				data.RemoveAt(index);
+				_rows -= 1;
+			}
+		}
+		/// <summary>
+		/// Remove the specified Integration block.
+		/// </summary>
+		/// <param name="index">The block index</param>
+		/// <remarks></remarks>
+		public void removeBlock(Int32 index) {
+			if (index < 0 || index > _blocks - 1) {throw new ArgumentOutOfRangeException("index");}
+			lock (slockop) {
+				for (int k = 0; k < _rows - 1; k++) {
+					data[k].RemoveAt(index);
+				}
+				_blocks -= 1;
+			}
+		}
+		/// <summary>
+		/// Clears the Integrator.
+		/// </summary>
+		/// <remarks></remarks>
+		public void clear() {
+			lock (slockop) {
+				data.Clear();
+				_blocks = 0;
+				_rows = 0;
 			}
 		}
 	}
