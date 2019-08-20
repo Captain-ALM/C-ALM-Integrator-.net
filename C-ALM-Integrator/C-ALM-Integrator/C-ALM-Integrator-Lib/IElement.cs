@@ -13,8 +13,9 @@ namespace captainalm.integrator
 {
 	/// <summary>
 	/// Provides a interface for integratable elements.
+	/// Make sure to implement the serializable attribute.
 	/// </summary>
-	public interface IElement : ISerializable
+	public interface IElement
 	{
 		/// <summary>
 		/// Gets or sets the held element.
