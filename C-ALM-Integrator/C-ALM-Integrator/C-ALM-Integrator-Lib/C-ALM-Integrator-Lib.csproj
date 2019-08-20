@@ -62,7 +62,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IElement.cs" />
+    <Compile Include="ILoader.cs" />
     <Compile Include="Integrator.cs" />
+    <Compile Include="ISaver.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
