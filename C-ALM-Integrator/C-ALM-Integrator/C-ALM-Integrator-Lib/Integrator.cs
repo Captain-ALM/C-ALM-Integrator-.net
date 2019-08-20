@@ -465,5 +465,29 @@ namespace captainalm.integrator
 			}
 			return toret.ToArray();
 		}
+		/// <summary>
+		/// Loads integration data from the specified loader into the integrator.
+		/// </summary>
+		/// <param name="loader">The loader to use</param>
+		/// <remarks></remarks>
+		public void load(ILoader loader) {
+			lock (slockop) {
+				Integrator me = loader.load();
+				_blocktypes = me._blocktypes;
+				data = me.data;
+				_blocks = me._blocks;
+				_rows = me._rows;
+			}
+		}
+		/// <summary>
+		/// Saves the integrator data using the specified saver.
+		/// </summary>
+		/// <param name="saver">The saver to use</param>
+		/// <remarks></remarks>
+		public void save(ISaver saver) {
+			lock (slockop) {
+				saver.save(this);
+			}
+		}
 	}
 }
