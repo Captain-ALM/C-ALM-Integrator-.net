@@ -24,14 +24,12 @@ namespace captainalm.integrator
 		Type[] _blocktypes = null;
 		Int32 _rows = 0;
 		Int32 _blocks = 0;
-		/// <summary>
-		/// Creates a new integrator class.
-		/// </summary>
-		/// <param name="types">The List of types in each block (Should all be IElement and be serializable)</param>
-		/// <remarks></remarks>
-		public Integrator(Type[] types)
-		{
-			Integrator(types,0,0);
+		private List<IElement> generateBlock() {
+			var lstb = new List<IElement>();
+			for (int l = 0; l < _blocktypes.Length - 1; l++) {
+				lstb.Add(null);
+			}
+			return lstb;
 		}
 		/// <summary>
 		/// Creates a new integrator class.
@@ -76,13 +74,12 @@ namespace captainalm.integrator
 				data.Add(lstr);
 			}
 		}
-		private List<IElement> generateBlock() {
-			var lstb = new List<IElement>();
-			for (int l = 0; l < _blocktypes.Length - 1; l++) {
-				lstb.Add(null);
-			}
-			return lstb;
-		}
+		/// <summary>
+		/// Creates a new integrator class.
+		/// </summary>
+		/// <param name="types">The List of types in each block (Should all be IElement and be serializable)</param>
+		/// <remarks></remarks>
+		public Integrator(Type[] types) : this(types, 0,0) {}
 		#region IDisposable implementation
 		/// <summary>
 		/// Dispose of resources.
