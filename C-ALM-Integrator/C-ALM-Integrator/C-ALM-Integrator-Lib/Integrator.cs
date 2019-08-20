@@ -16,7 +16,7 @@ namespace captainalm.integrator
 	/// <summary>
 	/// The Sealed Integrator Class for integration processing.
 	/// </summary>
-	public sealed class Integrator : IDeserializationCallback
+	public sealed class Integrator : IDeserializationCallback, IDisposable
 	{
 		[NonSerialized]
 		static Object slockop = new object();
@@ -68,8 +68,42 @@ namespace captainalm.integrator
 			_blocks = blocks;
 			if (rows < 0) {throw new ArgumentOutOfRangeException("rows");}
 			_rows = rows;
+			for (int j = 1; j < _rows; j++) {
+				var lstr = new List<List<IElement>>();
+				for (int k = 1; k < _blocks; k++) {
+					var lstb = new List<IElement>();
+					for (int l = 1; l < _blocktypes.Length - 1; l++) {
+						lstb.Add(null);
+					}
+					lstr.Add(lstb);
+				}
+				data.Add(lstr);
+			}
 		}
 
+		#region IDisposable implementation
+		/// <summary>
+		/// Dispose of resources.
+		/// </summary>
+		/// <remarks></remarks>
+		public void Dispose()
+		{
+			if (! object.ReferenceEquals(null, slockop)) {
+				lock(slockop) {
+					_blocks = 0;
+					_rows = 0;
+					if (! object.ReferenceEquals(null, _blocktypes)) {
+						_blocktypes = null;
+					}
+					if (! object.ReferenceEquals(null, data)) {
+						data.Clear();
+						data = null;
+					}
+				}
+				slockop = null;
+			}
+		}
+		#endregion
 		#region IDeserializationCallback implementation
 		/// <summary>
 		/// Deserialization callback.
@@ -88,9 +122,124 @@ namespace captainalm.integrator
 		/// <value>The block types used</value>
 		/// <returns>Type Array</returns>
 		/// <remarks></remarks>
-		public Type[] blockTypes { 
+		public Type[] blockTypes {
 			get {
 				return _blocktypes;
+			}
+		}
+		/// <summary>
+		/// Returns the number of integration rows.
+		/// </summary>
+		/// <value>The number of integration rows</value>
+		/// <returns>Int32</returns>
+		/// <remarks></remarks>
+		public Int32 rowCount {
+			get {
+				return _rows;
+			}
+		}
+		/// <summary>
+		/// Returns the number of integration blocks.
+		/// </summary>
+		/// <value>The number of integration blocks</value>
+		/// <returns>Int32</returns>
+		/// <remarks></remarks>
+		public Int32 blockCount {
+			get {
+				return _blocks;
+			}
+		}
+		/// <summary>
+		/// Returns the block data at the specified block and row.
+		/// </summary>
+		/// <param name="Block">The Index of the block</param>
+		/// <param name="Row">The Index of the row</param>
+		/// <returns>IElement Array</returns>
+		/// <remarks>I'm so sorry but c# does not support parameterized properties.</remarks>
+		public IElement[] get_block(Int32 Block, Int32 Row) {
+			IElement[] toret = null;
+			if (Block < 0 || Block > _blocks - 1) {throw new ArgumentOutOfRangeException("Block");}
+			if (Row < 0 || Row > _rows - 1) {throw new ArgumentOutOfRangeException("Row");}
+			lock (slockop) {
+				toret = data[Row][Block].ToArray();
+			}
+			return toret;
+		}
+		/// <summary>
+		/// Sets the block data at the specified block and row.
+		/// </summary>
+		/// <param name="Block">The Index of the block</param>
+		/// <param name="Row">The Index of the row</param>
+		/// <param name="value">The new IElement array value</param>
+		/// <remarks>I'm so sorry but c# does not support parameterized properties.</remarks>
+		public void set_block(Int32 Block, Int32 Row, IElement[] value) {
+			if (Block < 0 || Block > _blocks - 1) {throw new ArgumentOutOfRangeException("Block");}
+			if (Row < 0 || Row > _rows - 1) {throw new ArgumentOutOfRangeException("Row");}
+			lock (slockop) {
+				data[Row][Block] = new List<IElement>(value);
+			}
+		}
+		/// <summary>
+		/// Returns the element data at the specified block, row and index.
+		/// </summary>
+		/// <param name="Block">The Index of the block</param>
+		/// <param name="Row">The Index of the row</param>
+		/// <param name="Index">The Index of the element in the block</param>
+		/// <returns>IElement</returns>
+		/// <remarks>I'm so sorry but c# does not support parameterized properties.</remarks>
+		public IElement get_element(Int32 Block, Int32 Row, Int32 Index) {
+			IElement toret = null;
+			if (Block < 0 || Block > _blocks - 1) {throw new ArgumentOutOfRangeException("Block");}
+			if (Row < 0 || Row > _rows - 1) {throw new ArgumentOutOfRangeException("Row");}
+			if (Index < 0 || Index > _blocktypes.Length - 1) {throw new ArgumentOutOfRangeException("Index");}
+			lock (slockop) {
+				toret = data[Row][Block][Index];
+			}
+			return toret;
+		}
+		/// <summary>
+		/// Sets the block data at the specified block, row and index.
+		/// </summary>
+		/// <param name="Block">The Index of the block</param>
+		/// <param name="Row">The Index of the row</param>
+		/// <param name="Index">The Index of the element in the block</param>
+		/// <param name="value">The new IElement array value</param>
+		/// <remarks>I'm so sorry but c# does not support parameterized properties.</remarks>
+		public void set_element(Int32 Block, Int32 Row, Int32 Index, IElement value) {
+			if (Block < 0 || Block > _blocks - 1) {throw new ArgumentOutOfRangeException("Block");}
+			if (Row < 0 || Row > _rows - 1) {throw new ArgumentOutOfRangeException("Row");}
+			if (Index < 0 || Index > _blocktypes.Length - 1) {throw new ArgumentOutOfRangeException("Index");}
+			lock (slockop) {
+				data[Row][Block][Index] = value;
+			}
+		}
+		/// <summary>
+		/// Gets or sets the element at the specified block, row and index.
+		/// <param name="Block">The Index of the block</param>
+		/// <param name="Row">The Index of the row</param>
+		/// <param name="Index">The Index of the element in the block</param>
+		/// <value>The Element</value>
+		/// <returns>IElement</returns>
+		/// <remarks></remarks>
+		/// </summary>
+		public IElement this[Int32 Block, Int32 Row, Int32 Index] {
+			get {
+				IElement toret = null;
+				if (Block < 0 || Block > _blocks - 1) {throw new ArgumentOutOfRangeException("Block");}
+				if (Row < 0 || Row > _rows - 1) {throw new ArgumentOutOfRangeException("Row");}
+				if (Index < 0 || Index > _blocktypes.Length - 1) {throw new ArgumentOutOfRangeException("Index");}
+				lock (slockop) {
+					toret = data[Row][Block][Index];
+				}
+				return toret;
+			}
+			set {
+				if (Block < 0 || Block > _blocks - 1) {throw new ArgumentOutOfRangeException("Block");}
+				if (Row < 0 || Row > _rows - 1) {throw new ArgumentOutOfRangeException("Row");}
+				if (Index < 0 || Index > _blocktypes.Length - 1) {throw new ArgumentOutOfRangeException("Index");}
+				lock (slockop) {
+					data[Row][Block][Index] = value;
+				}
 			}
 		}
 	}
