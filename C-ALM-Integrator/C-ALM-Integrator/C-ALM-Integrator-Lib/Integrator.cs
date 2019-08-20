@@ -21,7 +21,7 @@ namespace captainalm.integrator
 		[NonSerialized]
 		static Object slockop = new object();
 		List<List<List<IElement>>> data = new List<List<List<IElement>>>();
-		List<Type> blocktypes = new List<Type>();
+		Type[] _blocktypes = null;
 		Int32 _rows = 0;
 		Int32 _blocks = 0;
 		/// <summary>
@@ -49,7 +49,7 @@ namespace captainalm.integrator
 						Type[] ints = c.GetInterfaces();
 						var intslst = new List<Type>(ints);
 						chk = intslst.Contains(typeof(IElement));
-						SerializableAttribute[] atrs = c.GetCustomAttributes(typeof(SetupMethodAttribute), false) as SerializableAttribute[];
+						var atrs = c.GetCustomAttributes(typeof(SerializableAttribute), false) as SerializableAttribute[];
 						if (!object.ReferenceEquals(null, atrs)) {
 							chk = chk && (atrs.Length > 0);
 						} else {
@@ -63,6 +63,7 @@ namespace captainalm.integrator
 			} else {
 				throw new ArgumentNullException("types");
 			}
+			_blocktypes = types;
 			if (blocks < 0) {throw new ArgumentOutOfRangeException("blocks");}
 			_blocks = blocks;
 			if (rows < 0) {throw new ArgumentOutOfRangeException("rows");}
@@ -74,11 +75,23 @@ namespace captainalm.integrator
 		/// Deserialization callback.
 		/// </summary>
 		/// <param name="sender">The caller</param>
+		/// <remarks></remarks>
 		public void OnDeserialization(object sender)
 		{
 			slockop = new Object();
 		}
 
 		#endregion
+		/// <summary>
+		/// Returns the types used per block.
+		/// </summary>
+		/// <value>The block types used</value>
+		/// <returns>Type Array</returns>
+		/// <remarks></remarks>
+		public Type[] blockTypes { 
+			get {
+				return _blocktypes;
+			}
+		}
 	}
 }
