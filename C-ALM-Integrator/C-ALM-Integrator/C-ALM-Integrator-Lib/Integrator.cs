@@ -359,5 +359,111 @@ namespace captainalm.integrator
 				_rows = 0;
 			}
 		}
+		/// <summary>
+		/// Finds the first element that equals the passed element giving its location.
+		/// </summary>
+		/// <param name="element">The element to find</param>
+		/// <returns>Int32 Array (With 3 Items: Block, Row, Index)</returns>
+		/// <remarks></remarks>
+		public Int32[] findElement(IElement element) {
+			if (object.ReferenceEquals(null, element)) {throw new ArgumentNullException("element");}
+			var toret = new Int32[] {-1,-1,-1};
+			lock (slockop) {
+				bool exitpls = false;
+				for (int j = 0; j < _rows - 1; j++) {
+					for (int k = 0; k < _blocks - 1; k++) {
+						for (int l = 0; l < _blocktypes.Length - 1; l++) {
+							if (! Object.Equals(null, data[j][k][l])) {
+								if (Object.Equals(data[j][k][l], element)) {
+									toret[0] = k;
+									toret[1] = j;
+									toret[2] = l;
+									exitpls = true;
+									break;
+								}
+							}
+							if (exitpls) {break;}
+						}
+						if (exitpls) {break;}
+					}
+					if (exitpls) {break;}
+				}
+			}
+			return toret;
+		}
+		/// <summary>
+		/// Finds the all the elements that equal the passed element giving their locations.
+		/// </summary>
+		/// <param name="element">The element to find</param>
+		/// <returns>An Array of an Int32 Array (With 3 Items: Block, Row, Index in each sub Array)</returns>
+		/// <remarks></remarks>
+		public Int32[][] findElements(IElement element) {
+			if (object.ReferenceEquals(null, element)) {throw new ArgumentNullException("element");}
+			var toret = new List<Int32[]>();
+			lock (slockop) {
+				for (int j = 0; j < _rows - 1; j++) {
+					for (int k = 0; k < _blocks - 1; k++) {
+						for (int l = 0; l < _blocktypes.Length - 1; l++) {
+							if (! Object.Equals(null, data[j][k][l])) {
+								if (Object.Equals(data[j][k][l], element)) {
+									var ctr = new Int32[] {k,j,l};
+									toret.Add(ctr);
+								}
+							}
+						}
+					}
+				}
+			}
+			return toret.ToArray();
+		}
+		/// <summary>
+		/// Finds the first element that is null giving its location.
+		/// </summary>
+		/// <returns>Int32 Array (With 3 Items: Block, Row, Index)</returns>
+		/// <remarks></remarks>
+		public Int32[] findNull() {
+			var toret = new Int32[] {-1,-1,-1};
+			lock (slockop) {
+				bool exitpls = false;
+				for (int j = 0; j < _rows - 1; j++) {
+					for (int k = 0; k < _blocks - 1; k++) {
+						for (int l = 0; l < _blocktypes.Length - 1; l++) {
+							if (Object.Equals(null, data[j][k][l])) {
+								toret[0] = k;
+								toret[1] = j;
+								toret[2] = l;
+								exitpls = true;
+								break;
+							}
+							if (exitpls) {break;}
+						}
+						if (exitpls) {break;}
+					}
+					if (exitpls) {break;}
+				}
+			}
+			return toret;
+		}
+		/// <summary>
+		/// Finds the all the elements that equal null giving their locations.
+		/// </summary>
+		/// <returns>An Array of an Int32 Array (With 3 Items: Block, Row, Index in each sub Array)</returns>
+		/// <remarks></remarks>
+		public Int32[][] findNulls() {
+			var toret = new List<Int32[]>();
+			lock (slockop) {
+				for (int j = 0; j < _rows - 1; j++) {
+					for (int k = 0; k < _blocks - 1; k++) {
+						for (int l = 0; l < _blocktypes.Length - 1; l++) {
+							if (Object.Equals(null, data[j][k][l])) {
+								var ctr = new Int32[] {k,j,l};
+								toret.Add(ctr);
+							}
+						}
+					}
+				}
+			}
+			return toret.ToArray();
+		}
 	}
 }
