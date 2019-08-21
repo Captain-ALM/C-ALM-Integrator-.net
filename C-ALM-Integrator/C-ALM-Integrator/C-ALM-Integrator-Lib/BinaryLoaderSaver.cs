@@ -103,12 +103,6 @@ namespace captainalm.integrator
 				if (rows < 1) {blocks = 0;} else {blocks = dst.Item2[0].Count;}
 				var blockSize = dst.Item1.Length;
 				var toret = new Integrator(dst.Item1, blocks,rows);
-				for (int i = 1; i < rows; i++) {
-					toret.addRow();
-				}
-				for (int i = 1; i < blocks; i++) {
-					toret.addBlock();
-				}
 				for (int i = 0; i < blocks - 1; i++) {
 					for (int j = 0; j < rows - 1; j++) {
 						for (int k = 0; k < blockSize - 1; k++) {
