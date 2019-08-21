@@ -61,6 +61,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BinaryLoaderSaver.cs" />
     <Compile Include="Element.cs" />
     <Compile Include="IElement.cs" />
     <Compile Include="ILoader.cs" />

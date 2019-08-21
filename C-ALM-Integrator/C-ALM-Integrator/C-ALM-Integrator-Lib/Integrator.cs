@@ -57,6 +57,8 @@ namespace captainalm.integrator
 							throw new ArgumentException("The type at index " + i + " in the types parameter does not implement IElement or have the SerializableAttribute");
 						}
 					}
+				} else {
+					throw new ArgumentException("types has no data");
 				}
 			} else {
 				throw new ArgumentNullException("types");
@@ -302,6 +304,7 @@ namespace captainalm.integrator
 		/// </summary>
 		/// <remarks></remarks>
 		public void removeLastRow() {
+			if (_rows - 1 < 0) {return;}
 			lock (slockop) {
 				data.RemoveAt(_rows - 1);
 				_rows -= 1;
@@ -312,6 +315,7 @@ namespace captainalm.integrator
 		/// </summary>
 		/// <remarks></remarks>
 		public void removeLastBlock() {
+			if (_blocks - 1 < 0) {return;}
 			lock (slockop) {
 				for (int k = 0; k < _rows - 1; k++) {
 					data[k].RemoveAt(_blocks - 1);
@@ -468,12 +472,15 @@ namespace captainalm.integrator
 		/// <param name="loader">The loader to use</param>
 		/// <remarks></remarks>
 		public void load(ILoader loader) {
+			if (object.ReferenceEquals(null, loader)) {throw new ArgumentNullException("loader");}
 			lock (slockop) {
 				Integrator me = loader.load();
-				_blocktypes = me._blocktypes;
-				data = me.data;
-				_blocks = me._blocks;
-				_rows = me._rows;
+				if (! object.ReferenceEquals(null, me)) {
+					_blocktypes = me._blocktypes;
+					data = me.data;
+					_blocks = me._blocks;
+					_rows = me._rows;
+				}
 			}
 		}
 		/// <summary>
@@ -482,6 +489,7 @@ namespace captainalm.integrator
 		/// <param name="saver">The saver to use</param>
 		/// <remarks></remarks>
 		public void save(ISaver saver) {
+			if (object.ReferenceEquals(null, saver)) {throw new ArgumentNullException("saver");}
 			lock (slockop) {
 				saver.save(this);
 			}
