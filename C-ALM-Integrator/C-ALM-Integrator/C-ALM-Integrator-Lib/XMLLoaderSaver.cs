@@ -7,7 +7,7 @@
  * To change this template use Tools | Options | Coding | Edit Standard Headers.
  */
 using System;
-using System.Xml;
+using System.IO;
 using System.Xml.Serialization;
 using System.Collections.Generic;
 
@@ -46,7 +46,57 @@ namespace captainalm.integrator
 		/// <remarks></remarks>
 		public virtual void save(Integrator toSave)
 		{
-			throw new NotImplementedException();
+			if (! object.ReferenceEquals(null, toSave)) {
+				var ndat = "";
+				var xf = new XmlSerializer(typeof(XMLIntegration));
+				var ms = new MemoryStream();
+				var sr = new StreamReader(ms);
+				var sw = new StreamWriter(ms);
+				try {
+					var xtodo = new XMLIntegration(toSave);
+					xf.Serialize(sw, xtodo);
+					ms.Position = 0;
+					ndat = sr.ReadToEnd();
+				} catch (ObjectDisposedException e) {
+					ndat = "";
+					sr.Dispose();
+					sr = null;
+					sw.Dispose();
+					sw = null;
+					ms.Dispose();
+					ms  = null;
+					xf = null;
+					throw e;
+				} catch (IOException e) {
+					ndat = "";
+					sr.Dispose();
+					sr = null;
+					sw.Dispose();
+					sw = null;
+					ms.Dispose();
+					ms  = null;
+					xf = null;
+					throw e;
+				} catch (OutOfMemoryException e) {
+					ndat = "";
+					sr.Dispose();
+					sr = null;
+					sw.Dispose();
+					sw = null;
+					ms.Dispose();
+					ms  = null;
+					xf = null;
+					throw e;
+				} finally {
+					if (! object.ReferenceEquals(null, sr)) {sr.Dispose();sr=null;}
+					if (! object.ReferenceEquals(null, sw)) {sw.Dispose();sw=null;}
+					if (! object.ReferenceEquals(null, ms)) {ms.Dispose();ms=null;}
+					xf = null;
+				}
+				_data = ndat;
+			} else {
+				throw new ArgumentNullException("toSave");
+			}
 		}
 
 		#endregion
@@ -59,7 +109,64 @@ namespace captainalm.integrator
 		/// <remarks></remarks>
 		public virtual Integrator load()
 		{
-			throw new NotImplementedException();
+			if (object.ReferenceEquals(null, _data)) {throw new NullReferenceException("_data");}
+			Integrator toret = null;
+			var xf = new XmlSerializer(typeof(XMLIntegration));
+			var ms = new MemoryStream();
+			var sw = new StreamWriter(ms);
+			try {
+				XMLIntegration xtoret = null;
+				sw.AutoFlush = true;
+				for (int i = 0; i < _data.Length - 1; i++) {
+					sw.Write(_data[i]);
+				}
+				if (! sw.AutoFlush) {sw.Flush();}
+				sw.AutoFlush = false;
+				ms.Position = 0;
+				xtoret = xf.Deserialize(ms) as XMLIntegration;
+				if (! object.ReferenceEquals(null, xtoret)) {
+					toret = xtoret.toIntegrator();
+				} else {
+					toret = null;
+				}
+			} catch (System.Text.EncoderFallbackException e) {
+				toret = null;
+				sw.Dispose();
+				sw = null;
+				ms.Dispose();
+				ms  = null;
+				xf = null;
+				throw e;
+			} catch (ObjectDisposedException e) {
+				toret = null;
+				sw.Dispose();
+				sw = null;
+				ms.Dispose();
+				ms  = null;
+				xf = null;
+				throw e;
+			} catch (IOException e) {
+				toret = null;
+				sw.Dispose();
+				sw = null;
+				ms.Dispose();
+				ms  = null;
+				xf = null;
+				throw e;
+			} catch (NotSupportedException e) {
+				toret = null;
+				sw.Dispose();
+				sw = null;
+				ms.Dispose();
+				ms  = null;
+				xf = null;
+				throw e;
+			} finally {
+				if (! object.ReferenceEquals(null, sw)) {sw.Dispose();sw=null;}
+				if (! object.ReferenceEquals(null, ms)) {ms.Dispose();ms=null;}
+				xf = null;
+			}
+			return toret;
 		}
 		
 		#endregion
