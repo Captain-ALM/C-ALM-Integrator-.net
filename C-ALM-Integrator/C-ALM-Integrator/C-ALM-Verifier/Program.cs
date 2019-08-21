@@ -7,9 +7,13 @@
  * To change this template use Tools | Options | Coding | Edit Standard Headers.
  */
 using System;
+using captainalm.integrator;
 
 namespace captainalm.integrator.verifier
 {
+	/// <summary>
+	/// Main Execution Class.
+	/// </summary>
 	class Program
 	{
 		public static void Main(string[] args)
