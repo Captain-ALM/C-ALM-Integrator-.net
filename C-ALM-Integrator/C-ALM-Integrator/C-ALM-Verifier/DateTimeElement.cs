@@ -28,7 +28,7 @@ namespace captainalm.integrator.verifier
 
 		public override string getElementAsString()
 		{
-			return (_held as DateTime).ToString();
+			return ((DateTime)_held).ToString();
 		}
 
 		public override void setElementAsByteArray(byte[] elementData)

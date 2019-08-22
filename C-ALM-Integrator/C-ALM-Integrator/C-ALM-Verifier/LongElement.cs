@@ -29,7 +29,7 @@ namespace captainalm.integrator.verifier
 
 		public override string getElementAsString()
 		{
-			return _held as string;
+			return ((Int64)_held).ToString();
 		}
 
 		public override void setElementAsByteArray(byte[] elementData)

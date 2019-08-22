@@ -33,11 +33,11 @@ namespace captainalm.integrator.verifier
 			if (elementsIn.Length > 0) {
 				path = elementsIn[0].HeldElement as string;
 				if (elementsIn.Length > 1) {
-					lastModified = elementsIn[1].HeldElement as DateTime;
+					lastModified = (DateTime)elementsIn[1].HeldElement;
 					if (elementsIn.Length > 2) {
 						hash = elementsIn[2].HeldElement as string;
 						if (elementsIn.Length > 3) {
-							size = elementsIn[3].HeldElement as Int64;
+							size = (Int64)elementsIn[3].HeldElement;
 						}
 					}
 				}
