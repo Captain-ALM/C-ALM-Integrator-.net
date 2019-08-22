@@ -28,6 +28,22 @@ namespace captainalm.integrator.verifier
 			path = pathIn;
 		}
 		
+		public FSOBase(IElement[] elementsIn)
+		{
+			if (elementsIn.Length > 0) {
+				path = elementsIn[0].HeldElement as string;
+				if (elementsIn.Length > 1) {
+					lastModified = elementsIn[1].HeldElement as DateTime;
+					if (elementsIn.Length > 2) {
+						hash = elementsIn[2].HeldElement as string;
+						if (elementsIn.Length > 3) {
+							size = elementsIn[3].HeldElement as Int64;
+						}
+					}
+				}
+			}
+		}
+		
 		public abstract void updateLastModified();
 		
 		public abstract void updateHash();
@@ -106,6 +122,15 @@ namespace captainalm.integrator.verifier
 			hp.Dispose();
 			hp = null;
 			return toret;
+		}
+		
+		public virtual IElement[] createElements(Boolean haveDateTimeModified, Boolean haveHash, Boolean haveSize) {
+			var toret = new List<IElement>();
+			toret.Add(new StringElement(path));
+			if (haveDateTimeModified) {toret.Add(new DateTimeElement(lastModified));}
+			if (haveHash) {toret.Add(new StringElement(hash));}
+			if (haveSize) {toret.Add(new LongElement(size));}
+			return toret.ToArray();
 		}
 	}
 }
