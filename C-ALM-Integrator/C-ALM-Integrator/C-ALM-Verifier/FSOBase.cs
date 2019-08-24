@@ -22,22 +22,27 @@ namespace captainalm.integrator.verifier
 		protected DateTime lastModified = DateTime.MinValue;
 		protected String hash = "";
 		protected Int64 size = 0;
+		protected FSOType type = FSOType.None;
 		
-		public FSOBase(String pathIn)
+		public FSOBase(String pathIn, FSOType typeIn)
 		{
 			path = pathIn;
+			type = typeIn;
 		}
 		
 		public FSOBase(IElement[] elementsIn)
 		{
 			if (elementsIn.Length > 0) {
-				path = elementsIn[0].HeldElement as string;
+				type = (FSOType)elementsIn[0].HeldElement;
 				if (elementsIn.Length > 1) {
-					lastModified = (DateTime)elementsIn[1].HeldElement;
+					path = elementsIn[1].HeldElement as string;
 					if (elementsIn.Length > 2) {
-						hash = elementsIn[2].HeldElement as string;
+						lastModified = (DateTime)elementsIn[2].HeldElement;
 						if (elementsIn.Length > 3) {
-							size = (Int64)elementsIn[3].HeldElement;
+							hash = elementsIn[3].HeldElement as string;
+							if (elementsIn.Length > 4) {
+								size = (Int64)elementsIn[4].HeldElement;
+							}
 						}
 					}
 				}
@@ -80,6 +85,12 @@ namespace captainalm.integrator.verifier
 		public virtual Int64 Size {
 			get {
 				return size;
+			}
+		}
+		
+		public virtual FSOType Type {
+			get {
+				return type;
 			}
 		}
 		
@@ -126,6 +137,7 @@ namespace captainalm.integrator.verifier
 		
 		public virtual IElement[] createElements(Boolean haveDateTimeModified, Boolean haveHash, Boolean haveSize) {
 			var toret = new List<IElement>();
+			toret.Add(new FSOTypeElement(type));
 			toret.Add(new StringElement(path));
 			if (haveDateTimeModified) {toret.Add(new DateTimeElement(lastModified));}
 			if (haveHash) {toret.Add(new StringElement(hash));}

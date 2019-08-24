@@ -69,7 +69,9 @@
   <ItemGroup>
     <Compile Include="DateTimeElement.cs" />
     <Compile Include="FSOBase.cs" />
+    <Compile Include="FSODirectory.cs" />
     <Compile Include="FSOFile.cs" />
+    <Compile Include="FSOTypeElement.cs" />
     <Compile Include="LongElement.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

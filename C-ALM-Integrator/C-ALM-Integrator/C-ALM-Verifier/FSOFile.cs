@@ -19,7 +19,8 @@ namespace captainalm.integrator.verifier
 	{
 		protected Boolean exists = false;
 		
-		public FSOFile(String filePathIn) : base(filePathIn) {}
+		public FSOFile(String filePathIn) : base(filePathIn, FSOType.File) {}
+		public FSOFile(String filePathIn, FSOType filTyp) : base(filePathIn, filTyp) {}
 
 		public override void update()
 		{
