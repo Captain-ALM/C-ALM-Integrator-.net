@@ -67,16 +67,16 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DateTimeElement.cs" />
-    <Compile Include="FSOBase.cs" />
-    <Compile Include="FSODirectory.cs" />
-    <Compile Include="FSOFile.cs" />
-    <Compile Include="FSOTypeElement.cs" />
-    <Compile Include="LongElement.cs" />
+    <Compile Include="Components\DateTimeElement.cs" />
+    <Compile Include="Components\FSOBase.cs" />
+    <Compile Include="Components\FSODirectory.cs" />
+    <Compile Include="Components\FSOFile.cs" />
+    <Compile Include="Components\FSOTypeElement.cs" />
+    <Compile Include="Components\LongElement.cs" />
+    <Compile Include="Components\StringArrayParser.cs" />
+    <Compile Include="Components\StringElement.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="StringArrayParser.cs" />
-    <Compile Include="StringElement.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
@@ -86,6 +86,9 @@
       <Project>{f402de2b-da29-4f6f-8a9a-982975a9d431}</Project>
       <Name>C-ALM-Integrator-Lib</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Components" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
