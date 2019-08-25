@@ -14,7 +14,7 @@ namespace captainalm.integrator.verifier
 	/// <summary>
 	/// StringArrayParser allows for a command line parsing.
 	/// </summary>
-	public class StringArrayParser
+	public sealed class StringArrayParser
 	{
 		private Dictionary<String, List<String>> _argdata = new Dictionary<String, List<String>>();
 		
@@ -66,6 +66,34 @@ namespace captainalm.integrator.verifier
 				toret = _argdata[Switch].ToArray();
 			}
 			return toret;
+		}
+		
+		public Int32 count {
+			get {
+				return _argdata.Count;
+			}
+		}
+		
+		public String[] Switches {
+			get {
+				var toret = new String[_argdata.Count];
+				_argdata.Keys.CopyTo(toret,0);
+				return toret;
+			}
+		}
+		
+		public Boolean hasSwitch(String Switch) {
+			return _argdata.ContainsKey(Switch);
+		}
+		
+		public Boolean hasSwitchIgnoreCase(String Switch) {
+			var bconvt = new String[_argdata.Keys.Count];
+			_argdata.Keys.CopyTo(bconvt,0);
+			var convt = new List<String>();
+			for (int i = 0; i < bconvt.Length - 1; i++) {
+				convt.Add(bconvt[i].ToLower());
+			}
+			return convt.Contains(Switch.ToLower());
 		}
 	}
 }
