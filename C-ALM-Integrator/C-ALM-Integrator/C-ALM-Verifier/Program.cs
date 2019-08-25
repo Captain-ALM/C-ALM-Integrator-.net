@@ -72,6 +72,162 @@ namespace captainalm.integrator.verifier
 		}
 		
 		static void processArgs() {
+			if (argsParser.hasSwitchIgnoreCase("set")) {
+				var switches = argsParser.get_argDataIgnoreCase("set");
+				if (! object.ReferenceEquals(null, switches[0])) {
+					setup = parseSetups(switches[0]);
+				} else {
+					throw new ArgumentException("set");
+				}
+			} else if (argsParser.hasSwitchIgnoreCase("setup")) {
+				var switches = argsParser.get_argDataIgnoreCase("setup");
+				if (! object.ReferenceEquals(null, switches[0])) {
+					setup = parseSetups(switches[0]);
+				} else {
+					throw new ArgumentException("setup");
+				}
+			}
+			if (argsParser.hasSwitchIgnoreCase("i")) {
+				var switches = argsParser.get_argDataIgnoreCase("i");
+				if (! object.ReferenceEquals(null, switches[0])) {
+					integrationFile = switches[0];
+				} else {
+					throw new ArgumentException("i");
+				}
+			} else if (argsParser.hasSwitchIgnoreCase("int")) {
+				var switches = argsParser.get_argDataIgnoreCase("int");
+				if (! object.ReferenceEquals(null, switches[0])) {
+					integrationFile = switches[0];
+				} else {
+					throw new ArgumentException("int");
+				}
+			} else if (argsParser.hasSwitchIgnoreCase("integration")) {
+				var switches = argsParser.get_argDataIgnoreCase("integration");
+				if (! object.ReferenceEquals(null, switches[0])) {
+					integrationFile = switches[0];
+				} else {
+					throw new ArgumentException("integration");
+				}
+			} else if (argsParser.hasSwitchIgnoreCase("f")) {
+				var switches = argsParser.get_argDataIgnoreCase("f");
+				if (! object.ReferenceEquals(null, switches[0])) {
+					integrationFile = switches[0];
+				} else {
+					throw new ArgumentException("f");
+				}
+			} else if (argsParser.hasSwitchIgnoreCase("file")) {
+				var switches = argsParser.get_argDataIgnoreCase("file");
+				if (! object.ReferenceEquals(null, switches[0])) {
+					integrationFile = switches[0];
+				} else {
+					throw new ArgumentException("file");
+				}
+			}
+			if (argsParser.hasSwitchIgnoreCase("s")) {
+				var switches = argsParser.get_argDataIgnoreCase("s");
+				if (! object.ReferenceEquals(null, switches[0])) {
+					sourcePath = switches[0];
+				} else {
+					throw new ArgumentException("s");
+				}
+			} else if (argsParser.hasSwitchIgnoreCase("source")) {
+				var switches = argsParser.get_argDataIgnoreCase("source");
+				if (! object.ReferenceEquals(null, switches[0])) {
+					sourcePath = switches[0];
+				} else {
+					throw new ArgumentException("source");
+				}
+			} else if (argsParser.hasSwitchIgnoreCase("sd")) {
+				var switches = argsParser.get_argDataIgnoreCase("sd");
+				if (! object.ReferenceEquals(null, switches[0])) {
+					sourcePath = switches[0];
+				} else {
+					throw new ArgumentException("sd");
+				}
+			} else if (argsParser.hasSwitchIgnoreCase("sourcedirectory")) {
+				var switches = argsParser.get_argDataIgnoreCase("sourcedirectory");
+				if (! object.ReferenceEquals(null, switches[0])) {
+					sourcePath = switches[0];
+				} else {
+					throw new ArgumentException("sourcedirectoryss");
+				}
+			}
+			if (argsParser.hasSwitchIgnoreCase("ip")) {
+				var switches = argsParser.get_argDataIgnoreCase("ip");
+				for (int i = 0; i < switches.Length - 1; i++) {
+					if (! object.ReferenceEquals(null, switches[i])) {
+						includedPaths.Add(switches[i]);
+					} else {
+						throw new ArgumentException("ip " + i);
+					}
+				}
+			} else if (argsParser.hasSwitchIgnoreCase("includepath")) {
+				var switches = argsParser.get_argDataIgnoreCase("includepath");
+				for (int i = 0; i < switches.Length - 1; i++) {
+					if (! object.ReferenceEquals(null, switches[i])) {
+						includedPaths.Add(switches[i]);
+					} else {
+						throw new ArgumentException("includepath " + i);
+					}
+				}
+			}
+			if (argsParser.hasSwitchIgnoreCase("ep")) {
+				var switches = argsParser.get_argDataIgnoreCase("ep");
+				for (int i = 0; i < switches.Length - 1; i++) {
+					if (! object.ReferenceEquals(null, switches[i])) {
+						excludedPaths.Add(switches[i]);
+					} else {
+						throw new ArgumentException("ep " + i);
+					}
+				}
+			} else if (argsParser.hasSwitchIgnoreCase("excludepath")) {
+				var switches = argsParser.get_argDataIgnoreCase("excludepath");
+				for (int i = 0; i < switches.Length - 1; i++) {
+					if (! object.ReferenceEquals(null, switches[i])) {
+						excludedPaths.Add(switches[i]);
+					} else {
+						throw new ArgumentException("excludepath " + i);
+					}
+				}
+			}
+			if (argsParser.hasSwitchIgnoreCase("ia")) {
+				var switches = argsParser.get_argDataIgnoreCase("ia");
+				for (int i = 0; i < switches.Length - 1; i++) {
+					if (! object.ReferenceEquals(null, switches[i])) {
+						includedAttributes.Add(parseAttributes(switches[i]));
+					} else {
+						throw new ArgumentException("ia " + i);
+					}
+				}
+			} else if (argsParser.hasSwitchIgnoreCase("includeattributes")) {
+				var switches = argsParser.get_argDataIgnoreCase("includeattributes");
+				for (int i = 0; i < switches.Length - 1; i++) {
+					if (! object.ReferenceEquals(null, switches[i])) {
+						includedAttributes.Add(parseAttributes(switches[i]));
+					} else {
+						throw new ArgumentException("includeattributes " + i);
+					}
+				}
+			}
+			if (argsParser.hasSwitchIgnoreCase("ea")) {
+				var switches = argsParser.get_argDataIgnoreCase("ea");
+				for (int i = 0; i < switches.Length - 1; i++) {
+					if (! object.ReferenceEquals(null, switches[i])) {
+						excludedAttributes.Add(parseAttributes(switches[i]));
+					} else {
+						throw new ArgumentException("ea " + i);
+					}
+				}
+			} else if (argsParser.hasSwitchIgnoreCase("excludeattributes")) {
+				var switches = argsParser.get_argDataIgnoreCase("excludeattributes");
+				for (int i = 0; i < switches.Length - 1; i++) {
+					if (! object.ReferenceEquals(null, switches[i])) {
+						excludedAttributes.Add(parseAttributes(switches[i]));
+					} else {
+						throw new ArgumentException("excludeattributes " + i);
+					}
+				}
+			}
 			
 		}
 		
@@ -85,7 +241,7 @@ namespace captainalm.integrator.verifier
 			Console.WriteLine("/ denotes optional part.");
 			Console.WriteLine("Switches ; Argument Reference Link:");
 			Console.WriteLine("?, u, usage, h or help : shows this message.");
-			Console.WriteLine("s or setup : specifies the setup; %SETUPCODE%...(Repeat)...");
+			Console.WriteLine("set or setup : specifies the setup; %SETUPCODE%...(Repeat)...");
 			Console.WriteLine("i, int, integration, f, file : specifies the integration file; %PATH%");
 			Console.WriteLine("s, source, sd or sourcedirectory : specifies the source directory; %PATH%");
 			Console.WriteLine("p or prompt : enables prompting.");
@@ -185,5 +341,5 @@ namespace captainalm.integrator.verifier
 		Create = 1,
 		Verify = 2,
 		Update = 3
-	}	
+	}
 }

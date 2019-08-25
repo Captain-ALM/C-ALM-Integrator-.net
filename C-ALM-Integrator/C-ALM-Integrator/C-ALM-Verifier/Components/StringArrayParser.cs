@@ -60,6 +60,20 @@ namespace captainalm.integrator.verifier
 			}
 		}
 		
+		public String[] get_argDataIgnoreCase(String Switch) {
+			String[] toret = null;
+			var bconvt = new String[_argdata.Keys.Count];
+			_argdata.Keys.CopyTo(bconvt,0);
+			var convt = new Dictionary<String, List<String>>();
+			for (int i = 0; i < bconvt.Length - 1; i++) {
+				convt.Add(bconvt[i].ToLower(),_argdata[bconvt[i]]);
+			}
+			if (convt.ContainsKey(Switch.ToLower())) {
+				toret = _argdata[Switch].ToArray();
+			}
+			return toret;
+		}
+		
 		public String[] get_argData(String Switch) {
 			String[] toret = null;
 			if (_argdata.ContainsKey(Switch)) {
