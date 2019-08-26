@@ -172,7 +172,7 @@ namespace captainalm.integrator
 		#endregion
 		
 		[XmlRootAttribute("Integration", Namespace="http://www.cpandl.com", IsNullable = false)]
-		protected sealed class XMLIntegration {
+		public sealed class XMLIntegration {
 			[XmlArray("rows")]
 			public XRow[] rows;
 			public String types;
@@ -326,7 +326,7 @@ namespace captainalm.integrator
 			}
 		}
 		
-		protected sealed class NullElement : IElement {
+		public sealed class NullElement : IElement {
 			public NullElement() {}
 
 			#region IElement implementation

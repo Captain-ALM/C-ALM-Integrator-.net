@@ -10,6 +10,7 @@ using System;
 
 namespace captainalm.integrator.verifier
 {
+    [Serializable]
 	/// <summary>
 	/// FSOTypeElement.
 	/// </summary>
@@ -54,7 +55,8 @@ namespace captainalm.integrator.verifier
 
 		#endregion
 	}
-	
+
+	[Serializable]
 	public enum FSOType {
 		None = 0,
 		File = 1,

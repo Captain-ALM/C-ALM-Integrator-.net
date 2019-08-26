@@ -27,7 +27,7 @@ namespace captainalm.integrator.verifier
 				var c = parseIn[i];
 				if (! na) {
 					if (c.EndsWith(switchArgShower.ToString())) {
-						cc = c.Substring(0,c.Length - 2);
+						cc = c.Substring(0,c.Length - 1);
 						na = true;
 					} else {
 						intArgData.Add(new Tuple<String, String>(c, null));

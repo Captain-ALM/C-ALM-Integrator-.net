@@ -68,9 +68,9 @@ namespace captainalm.integrator
 			_blocks = blocks;
 			if (rows < 0) {throw new ArgumentOutOfRangeException("rows");}
 			_rows = rows;
-			for (int j = 1; j < _rows; j++) {
+			for (int j = 0; j < _rows; j++) {
 				var lstr = new List<List<IElement>>();
-				for (int k = 1; k < _blocks; k++) {
+				for (int k = 0; k < _blocks; k++) {
 					lstr.Add(generateBlock());
 				}
 				data.Add(lstr);

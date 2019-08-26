@@ -25,8 +25,9 @@ namespace captainalm.integrator.verifier
 
 		public virtual FSOBase[] trawl(Boolean includeDirectories) {
 			var toret = new List<FSOBase>();
+            subFSO.Clear();
 			if (includeDirectories) {
-				var dirs = new List<String>(Directory.EnumerateFiles(path));
+				var dirs = new List<String>(Directory.EnumerateDirectories(path));
 				for (int i = 0; i < dirs.Count; i++) {
 					var c = new FSODirectory(dirs[i]);
 					c.update();
@@ -45,7 +46,8 @@ namespace captainalm.integrator.verifier
 		
 		public virtual FSOBase[] trawlRecursively() {
 			var toret = new List<FSOBase>();
-			var dirs = new List<String>(Directory.EnumerateFiles(path));
+            subFSO.Clear();
+			var dirs = new List<String>(Directory.EnumerateDirectories(path));
 			for (int i = 0; i < dirs.Count; i++) {
 				var c = new FSODirectory(dirs[i]);
 				toret.AddRange(c.trawlRecursively());

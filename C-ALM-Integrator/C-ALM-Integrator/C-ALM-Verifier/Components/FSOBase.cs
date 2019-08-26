@@ -130,7 +130,7 @@ namespace captainalm.integrator.verifier
 		}
 		
 		protected virtual Byte[] hashProcess(Byte[] dataIn) {
-			var hp = new SHA512Managed();
+            var hp = new SHA512Managed();
 			var toret = hp.ComputeHash(dataIn);
 			hp.Dispose();
 			hp = null;

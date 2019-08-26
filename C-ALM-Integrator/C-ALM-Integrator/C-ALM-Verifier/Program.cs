@@ -30,7 +30,7 @@ namespace captainalm.integrator.verifier
 		static List<setups> setup = new List<setups>();
 		static Integrator side1 = null;
 		static Integrator side2 = null;
-		static Type[] integratorTypes = new Type[] {typeof(FSOType), typeof(StringElement),typeof(DateTimeElement), typeof(StringElement), typeof(LongElement)};
+		static Type[] integratorTypes = new Type[] {typeof(FSOTypeElement), typeof(StringElement),typeof(DateTimeElement), typeof(StringElement), typeof(LongElement)};
 		
 		public static void Main(string[] args)
 		{
@@ -506,6 +506,9 @@ namespace captainalm.integrator.verifier
 					case 'v':
 						toret.Add(setups.Verify);
 						break;
+                    case 'l':
+                        toret.Add(setups.Load);
+                        break;
 				}
 			}
 			return toret;
