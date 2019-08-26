@@ -111,5 +111,32 @@ namespace captainalm.integrator
 		}
 
 		#endregion
+		
+		#region Equals and GetHashCode implementation
+		public override bool Equals(object obj)
+		{
+			Element other = obj as Element;
+				if (other == null)
+					return false;
+						return object.Equals(this._held, other._held);
+		}
+		public override int GetHashCode()
+		{
+			return base.GetHashCode();
+		}
+
+		public static bool operator ==(Element lhs, Element rhs) {
+			if (ReferenceEquals(lhs, rhs))
+				return true;
+			if (ReferenceEquals(lhs, null) || ReferenceEquals(rhs, null))
+				return false;
+			return lhs.Equals(rhs);
+		}
+
+		public static bool operator !=(Element lhs, Element rhs) {
+			return !(lhs == rhs);
+		}
+
+		#endregion
 	}
 }

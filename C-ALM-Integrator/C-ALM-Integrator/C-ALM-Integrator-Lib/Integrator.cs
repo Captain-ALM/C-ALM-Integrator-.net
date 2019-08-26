@@ -494,5 +494,88 @@ namespace captainalm.integrator
 				saver.save(this);
 			}
 		}
+		/// <summary>
+		/// Finds the first element block that equals the passed element block giving its location.
+		/// </summary>
+		/// <param name="elementBlockIn">The element block to find</param>
+		/// <returns>Int32 Array (With 2 Items: Block, Row)</returns>
+		/// <remarks></remarks>
+		public Int32[] findElementBlock(IElement[] elementBlockIn) {
+			if (object.ReferenceEquals(null, elementBlockIn)) {throw new ArgumentNullException("elementBlockIn");}
+			if (elementBlockIn.Length != _blocktypes.Length) {throw new ArgumentException("elementBlockIn");}
+			for (int i = 0; i < elementBlockIn.Length - 1; i++) {
+				if (object.ReferenceEquals(null, elementBlockIn[i])) {throw new ArgumentException("elementBlockIn");}
+			}
+			var toret = new Int32[] {-1,-1};
+			lock (slockop) {
+				bool exitpls = false;
+				for (int j = 0; j < _rows - 1; j++) {
+					for (int k = 0; k < _blocks - 1; k++) {
+						var ists = false;
+						for (int l = 0; l < _blocktypes.Length - 1; l++) {
+							if (! Object.Equals(null, data[j][k][l])) {
+								if (Object.Equals(data[j][k][l], elementBlockIn[l])) {
+									ists = true;
+								} else {
+									ists = false;
+									break;
+								}
+							} else {
+								ists = false;
+								break;
+							}
+						}
+						if (ists) {
+							toret[0] = k;
+							toret[1] = j;
+							exitpls = true;
+							break;
+						}
+						if (exitpls) {break;}
+					}
+					if (exitpls) {break;}
+				}
+			}
+			return toret;
+		}
+		/// <summary>
+		/// Finds the all the element blocks that equal the passed element block giving their locations.
+		/// </summary>
+		/// <param name="elementBlockIn">The element block to find</param>
+		/// <returns>An Array of an Int32 Array (With 2 Items: Block, Row in each sub Array)</returns>
+		/// <remarks></remarks>
+		public Int32[][] findElementBlocks(IElement[] elementBlockIn) {
+			if (object.ReferenceEquals(null, elementBlockIn)) {throw new ArgumentNullException("elementBlockIn");}
+			if (elementBlockIn.Length != _blocktypes.Length) {throw new ArgumentException("elementBlockIn");}
+			for (int i = 0; i < elementBlockIn.Length - 1; i++) {
+				if (object.ReferenceEquals(null, elementBlockIn[i])) {throw new ArgumentException("elementBlockIn");}
+			}
+			var toret = new List<Int32[]>();
+			lock (slockop) {
+				for (int j = 0; j < _rows - 1; j++) {
+					for (int k = 0; k < _blocks - 1; k++) {
+						var ists = false;
+						for (int l = 0; l < _blocktypes.Length - 1; l++) {
+							if (! Object.Equals(null, data[j][k][l])) {
+								if (Object.Equals(data[j][k][l], elementBlockIn[l])) {
+									ists = true;
+								} else {
+									ists = false;
+									break;
+								}
+							} else {
+								ists = false;
+								break;
+							}
+						}
+						if(ists) {
+							var ctr = new Int32[] {k,j};
+							toret.Add(ctr);
+						}
+					}
+				}
+			}
+			return toret.ToArray();
+		}
 	}
 }

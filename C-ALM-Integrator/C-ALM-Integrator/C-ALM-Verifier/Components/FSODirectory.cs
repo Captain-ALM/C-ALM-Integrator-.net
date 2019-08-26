@@ -17,11 +17,11 @@ namespace captainalm.integrator.verifier
 	/// </summary>
 	public class FSODirectory : FSOBase
 	{
-		protected Boolean exists = false;
 		protected List<FSOBase> subFSO = new List<FSOBase>();
 		
 		public FSODirectory(String dirPathIn) : base(dirPathIn, FSOType.Directory) {}
 		public FSODirectory(String dirPathIn, FSOType dirTyp) : base(dirPathIn, dirTyp) {}
+		public FSODirectory(IElement[] elementsIn) : base(elementsIn) {}
 
 		public virtual FSOBase[] trawl(Boolean includeDirectories) {
 			var toret = new List<FSOBase>();
@@ -100,16 +100,8 @@ namespace captainalm.integrator.verifier
 				size += c.Size;
 			}
 		}
-
-		#endregion
 		
-		public virtual Boolean Exists {
-			get {
-				return exists;
-			}
-		}
-		
-		public virtual FileAttributes Attributes {
+		public override FileAttributes Attributes {
 			get {
 				if (exists) {
 					var toret = FileAttributes.Normal;
@@ -123,6 +115,8 @@ namespace captainalm.integrator.verifier
 				}
 			}
 		}
+
+		#endregion
 		
 		public virtual FSOBase[] contents {
 			get {

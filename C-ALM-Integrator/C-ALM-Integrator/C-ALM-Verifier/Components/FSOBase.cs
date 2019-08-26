@@ -7,6 +7,7 @@
  * To change this template use Tools | Options | Coding | Edit Standard Headers.
  */
 using System;
+using System.IO;
 using System.Security.Cryptography;
 using System.Collections.Generic;
 
@@ -23,6 +24,7 @@ namespace captainalm.integrator.verifier
 		protected String hash = "";
 		protected Int64 size = 0;
 		protected FSOType type = FSOType.None;
+		protected Boolean exists = false;
 		
 		public FSOBase(String pathIn, FSOType typeIn)
 		{
@@ -135,14 +137,22 @@ namespace captainalm.integrator.verifier
 			return toret;
 		}
 		
-		public virtual IElement[] createElements(Boolean haveDateTimeModified, Boolean haveHash, Boolean haveSize) {
+		public virtual IElement[] createElements() {
 			var toret = new List<IElement>();
 			toret.Add(new FSOTypeElement(type));
 			toret.Add(new StringElement(path));
-			if (haveDateTimeModified) {toret.Add(new DateTimeElement(lastModified));}
-			if (haveHash) {toret.Add(new StringElement(hash));}
-			if (haveSize) {toret.Add(new LongElement(size));}
+			toret.Add(new DateTimeElement(lastModified));
+			toret.Add(new StringElement(hash));
+			toret.Add(new LongElement(size));
 			return toret.ToArray();
 		}
+		
+		public virtual Boolean Exists {
+			get {
+				return exists;
+			}
+		}
+		
+		public abstract FileAttributes Attributes {get;}
 	}
 }

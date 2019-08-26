@@ -17,10 +17,9 @@ namespace captainalm.integrator.verifier
 	/// </summary>
 	public class FSOFile : FSOBase
 	{
-		protected Boolean exists = false;
-		
 		public FSOFile(String filePathIn) : base(filePathIn, FSOType.File) {}
 		public FSOFile(String filePathIn, FSOType filTyp) : base(filePathIn, filTyp) {}
+		public FSOFile(IElement[] elementsIn) : base(elementsIn) {}
 
 		public override void update()
 		{
@@ -57,16 +56,8 @@ namespace captainalm.integrator.verifier
 			size = fi.Length;
 			fi = null;
 		}
-
-		#endregion
 		
-		public virtual Boolean Exists {
-			get {
-				return exists;
-			}
-		}
-		
-		public virtual FileAttributes Attributes {
+		public override FileAttributes Attributes {
 			get {
 				if (exists) {
 					var toret = FileAttributes.Normal;
@@ -80,5 +71,7 @@ namespace captainalm.integrator.verifier
 				}
 			}
 		}
+
+		#endregion
 	}
 }

@@ -28,6 +28,9 @@ namespace captainalm.integrator.verifier
 		static Boolean prompt = false;
 		static Boolean serializeIntegration = false;
 		static List<setups> setup = new List<setups>();
+		static Integrator side1 = null;
+		static Integrator side2 = null;
+		static Type[] integratorTypes = new Type[] {typeof(FSOType), typeof(StringElement),typeof(DateTimeElement), typeof(StringElement), typeof(LongElement)};
 		
 		public static void Main(string[] args)
 		{
@@ -39,8 +42,8 @@ namespace captainalm.integrator.verifier
 				displayHelp();
 				Environment.Exit(0);
 			} else {
-				if (argsParser.hasSwitchIgnoreCase("p") || argsParser.hasSwitchIgnoreCase("prompt")) {prompt = true;}
-				if (argsParser.hasSwitchIgnoreCase("ser") || argsParser.hasSwitchIgnoreCase("serialize")) {serializeIntegration = true;}
+				prompt |= argsParser.hasSwitchIgnoreCase("p") || argsParser.hasSwitchIgnoreCase("prompt");
+				serializeIntegration |= argsParser.hasSwitchIgnoreCase("ser") || argsParser.hasSwitchIgnoreCase("serialize");
 				if (argsParser.hasSwitch("?") || argsParser.hasSwitchIgnoreCase("h") || argsParser.hasSwitchIgnoreCase("help") || argsParser.hasSwitchIgnoreCase("u") || argsParser.hasSwitchIgnoreCase("usage")) {
 					displayHelp();
 					Environment.Exit(0);
@@ -232,7 +235,216 @@ namespace captainalm.integrator.verifier
 		}
 		
 		static void runtime() {
+			for (int i = 0; i < setup.Count - 1; i++) {
+				var c = setup[i];
+				switch (c) {
+					case setups.Create:
+						create();
+						break;
+					case setups.Load:
+						load();
+						break;
+					case setups.Verify:
+						verify();
+						break;
+					case setups.Update:
+						update();
+						break;
+				}
+			}
+		}
+		
+		static void create() {
+			Console.WriteLine("Creating...");
+			var baseDir = new FSODirectory(sourcePath, FSOType.RootDirectory);
+			var subObjs = baseDir.trawlRecursively();
+			baseDir.update();
+			var objs = new List<FSOBase>();
+			objs.Add(baseDir);
+			objs.AddRange(subObjs);
+			var pro = doPromptsAndInclusionsAndExclusions(objs, prompt);
+			side1 = new Integrator(integratorTypes, 1, pro.Count);
+			for (int i = 0; i < pro.Count - 1; i++) {
+				side1.set_block(0,i,pro[i].createElements());
+			}
+			if (serializeIntegration) {
+				var sav = new BinaryLoaderSaver();
+				side1.save(sav);
+				File.WriteAllBytes(integrationFile, sav.data);
+			} else {
+				var sav = new XMLLoaderSaver();
+				side1.save(sav);
+				File.WriteAllText(integrationFile, sav.data);
+			}
+		}
+		
+		static void load() {
+			Console.WriteLine("Loading...");
+			if (serializeIntegration) {
+				var dat = File.ReadAllBytes(integrationFile);
+				var lod = new BinaryLoaderSaver(dat);
+				side1 = new Integrator(integratorTypes, 0, 0);
+				side1.load(lod);
+			} else {
+				var dat = File.ReadAllText(integrationFile);
+				var lod = new XMLLoaderSaver(dat);
+				side1 = new Integrator(integratorTypes, 0, 0);
+				side1.load(lod);
+			}
 			
+		}
+		
+		static void verify() {
+			Console.WriteLine("Processing...");
+			var indxs = side1.findElements(new FSOTypeElement(FSOType.RootDirectory));
+			var indxs2 = side1.findElements(new FSOTypeElement(FSOType.RootFile));
+			var bsObjs = new List<FSODirectory>();
+			var bsObjs2 = new List<FSOFile>();
+			for (int i = 0; i < indxs.Length - 1; i++) {
+				var cindxs = indxs[i];
+				bsObjs.Add(new FSODirectory(side1.get_block(cindxs[0], cindxs[1])));
+			}
+			for (int i = 0; i < indxs2.Length - 1; i++) {
+				var cindxs = indxs2[i];
+				bsObjs2.Add(new FSOFile(side1.get_block(cindxs[0], cindxs[1])));
+			}
+			var objs2Add = new List<FSOBase>();
+			for (int i = 0; i < bsObjs.Count - 1; i++) {
+				objs2Add.AddRange(bsObjs[i].trawlRecursively());
+				bsObjs[i].update();
+			}
+			for (int i = 0; i < bsObjs2.Count - 1; i++) {
+				bsObjs2[i].update();
+			}
+			var objs = new List<FSOBase>();
+			objs.AddRange(bsObjs);
+			objs.AddRange(bsObjs2);
+			objs.AddRange(objs2Add);
+			var pro = doPromptsAndInclusionsAndExclusions(objs,false);
+			side2 = new Integrator(integratorTypes, 1, pro.Count);
+			for (int i = 0; i < pro.Count - 1; i++) {
+				side2.set_block(0,i,pro[i].createElements());
+			}
+			Console.WriteLine("Verifying...");
+			var verstat = true;
+			for (int i = 0; i < side1.rowCount - 1; i++) {
+				var ceblock = side1.get_block(0, i);
+				var csindx = findElementBlock(side2, (String)((StringElement)ceblock[1]).HeldElement);
+				if (csindx[0] == -1 || csindx[1] == -1) {
+					var cfso = constructFSO(ceblock);
+					Console.WriteLine("Detect Failed: " + cfso.Path);
+					verstat = verstat && false;
+				} else {
+					var ceblockupd = side2.get_block(csindx[0], csindx[1]);
+					var cfso = constructFSO(ceblock);
+					var cfsoupd = constructFSO(ceblockupd);
+					Console.WriteLine("Detect Succeeded: " + cfso.Path);
+					var lmb = cfso.LastModified == cfsoupd.LastModified;
+					Console.WriteLine("Last Modified DateTime Equal: " + lmb);
+					var hb = cfso.Hash == cfsoupd.Hash;
+					Console.WriteLine("Hash Equal: " + hb);
+					var sb = cfso.Size == cfsoupd.Size;
+					Console.WriteLine("Size Equal: " + sb);
+					var tsb = lmb && hb && sb;
+					Console.WriteLine("Verified Equal: " + tsb);
+					verstat = verstat && tsb;
+				}
+			}
+			for (int i = 0; i < side2.rowCount - 1; i++) {
+				var ceblock = side2.get_block(0, i);
+				var csindx = findElementBlock(side1, (String)((StringElement)ceblock[1]).HeldElement);
+				if (csindx[0] == -1 || csindx[1] == -1) {
+					var cfso = constructFSO(ceblock);
+					Console.WriteLine("Detect Other: " + cfso.Path);
+					verstat = verstat && false;
+				}
+			}
+			Console.WriteLine("Verify Status: " + verstat);
+		}
+		
+		static void update() {
+			Console.WriteLine("Updating...");
+			if (serializeIntegration) {
+				var sav = new BinaryLoaderSaver();
+				side2.save(sav);
+				File.WriteAllBytes(integrationFile, sav.data);
+			} else {
+				var sav = new XMLLoaderSaver();
+				side2.save(sav);
+				File.WriteAllText(integrationFile, sav.data);
+			}
+		}
+		
+		static FSOBase constructFSO(IElement[] elementsIn) {
+			var fsot = (FSOType)((FSOTypeElement)elementsIn[0]).HeldElement;
+			if (fsot == FSOType.RootDirectory || fsot == FSOType.Directory) {
+				return new FSODirectory(elementsIn);
+			} else if (fsot == FSOType.RootFile || fsot == FSOType.File) {
+				return new FSOFile(elementsIn);
+			}
+			return null;
+		}
+		
+		static int[] findElementBlock(Integrator INT,String path) {
+			var pse = new StringElement(path);
+			var findx = INT.findElement(pse);
+			if (findx[0] == -1 || findx[1] == -1 || findx[2] == -1) {
+				return new int[] {-1,-1};
+			} else {
+				return new int[] {findx[0], findx[1]};
+			}
+		}
+		
+		static List<FSOBase> doPromptsAndInclusionsAndExclusions(List<FSOBase> dataIn, Boolean Prompt) {
+			var torem = new List<Int32>();
+			for (int i = 0; i < dataIn.Count - 1; i++) {
+				var c = dataIn[i];
+				var res = false;
+				if (! excludedAttributes.Contains(c.Attributes)) {
+					res = includedAttributes.Count <= 0 || includedAttributes.Contains(c.Attributes);
+				} else {
+					res = false;
+				}
+				if (! isPath(excludedPaths, c.Path)) {
+					res = includedPaths.Count <= 0 || isPath(includedPaths, c.Path);
+				} else {
+					res = false;
+				}
+				if (res && Prompt) {
+					Console.WriteLine("Include: " + c.Path + " ?");
+					Console.WriteLine("[Else] Include, [E] Exclude, [X] Exit");
+					var rkey = Console.ReadKey();
+					if (rkey.Key == ConsoleKey.E) {
+						res = false;
+					} else if (rkey.Key == ConsoleKey.X) {
+						res = false;
+						Environment.Exit(0);
+					}
+				}
+				if (! res) {
+					torem.Add(i);
+				}
+			}
+			torem.Reverse();
+			for (int i = 0; i < torem.Count - 1; i++) {
+				dataIn.RemoveAt(torem[i]);
+			}
+			return dataIn;
+		}
+		
+		static Boolean isPath(List<String> pathsIn, String pToCheck) {
+			var toret = false;
+			for (int i = 0; i < pathsIn.Count - 1; i++) {
+				var c = pathsIn[i];
+				if (pToCheck == c) {
+					toret = true;
+					break;
+				} else if (pToCheck.StartsWith(c)) {
+					toret = true;
+					break;
+				}
+			}
+			return toret;
 		}
 		
 		static void displayHelp() {
@@ -253,6 +465,7 @@ namespace captainalm.integrator.verifier
 			Console.WriteLine("Argument Reference:");
 			Console.WriteLine("%SETUPCODE%:");
 			Console.WriteLine("C : Create.");
+			Console.WriteLine("L : Load.");
 			Console.WriteLine("U : Update.");
 			Console.WriteLine("V : Verify.");
 			Console.WriteLine("%PATH%:");
@@ -283,12 +496,16 @@ namespace captainalm.integrator.verifier
 			var toret = new List<setups>();
 			for (int i = 0; i < theArg.Length - 1; i++) {
 				var c = theArg.ToLower()[i];
-				if (c == 'c') {
-					toret.Add(setups.Create);
-				} else if (c == 'u') {
-					toret.Add(setups.Update);
-				} else if (c == 'v') {
-					toret.Add(setups.Verify);
+				switch (c) {
+					case 'c':
+						toret.Add(setups.Create);
+						break;
+					case 'u':
+						toret.Add(setups.Update);
+						break;
+					case 'v':
+						toret.Add(setups.Verify);
+						break;
 				}
 			}
 			return toret;
@@ -304,34 +521,35 @@ namespace captainalm.integrator.verifier
 		}
 		
 		static FileAttributes addAnotherAttribute(FileAttributes cfa, Char code) {
-			if (code == '1') {
-				return cfa | FileAttributes.Archive;
-			} else if (code == '2') {
-				return cfa | FileAttributes.Compressed;
-			} else if (code == '3') {
-				return cfa | FileAttributes.Device;
-			} else if (code == '4') {
-				return cfa | FileAttributes.Directory;
-			} else if (code == '5') {
-				return cfa | FileAttributes.Encrypted;
-			} else if (code == '6') {
-				return cfa | FileAttributes.Hidden;
-			} else if (code == '7') {
-				return cfa | FileAttributes.Normal;
-			} else if (code == '8') {
-				return cfa | FileAttributes.NotContentIndexed;
-			} else if (code == '9') {
-				return cfa | FileAttributes.Offline;
-			} else if (code == '0') {
-				return cfa | FileAttributes.ReadOnly;
-			} else if (code == 'a') {
-				return cfa | FileAttributes.ReparsePoint;
-			} else if (code == 'b') {
-				return cfa | FileAttributes.SparseFile;
-			} else if (code == 'c') {
-				return cfa | FileAttributes.System;
-			} else if (code == 'd') {
-				return cfa | FileAttributes.Temporary;
+			switch (code) {
+				case '1':
+					return cfa | FileAttributes.Archive;
+				case '2':
+					return cfa | FileAttributes.Compressed;
+				case '3':
+					return cfa | FileAttributes.Device;
+				case '4':
+					return cfa | FileAttributes.Directory;
+				case '5':
+					return cfa | FileAttributes.Encrypted;
+				case '6':
+					return cfa | FileAttributes.Hidden;
+				case '7':
+					return cfa | FileAttributes.Normal;
+				case '8':
+					return cfa | FileAttributes.NotContentIndexed;
+				case '9':
+					return cfa | FileAttributes.Offline;
+				case '0':
+					return cfa | FileAttributes.ReadOnly;
+				case 'a':
+					return cfa | FileAttributes.ReparsePoint;
+				case 'b':
+					return cfa | FileAttributes.SparseFile;
+				case 'c':
+					return cfa | FileAttributes.System;
+				case 'd':
+					return cfa | FileAttributes.Temporary;
 			}
 			return cfa;
 		}
@@ -339,7 +557,8 @@ namespace captainalm.integrator.verifier
 	
 	enum setups {
 		Create = 1,
-		Verify = 2,
-		Update = 3
+		Load = 2,
+		Verify = 3,
+		Update = 4
 	}
 }
