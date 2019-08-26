@@ -27,14 +27,14 @@ namespace captainalm.integrator.verifier
 			var toret = new List<FSOBase>();
 			if (includeDirectories) {
 				var dirs = new List<String>(Directory.EnumerateFiles(path));
-				for (int i = 0; i < dirs.Count - 1; i++) {
+				for (int i = 0; i < dirs.Count; i++) {
 					var c = new FSODirectory(dirs[i]);
 					c.update();
 					toret.Add(c);
 				}
 			}
 			var files = new List<String>(Directory.EnumerateFiles(path));
-			for (int i = 0; i < files.Count - 1; i++) {
+			for (int i = 0; i < files.Count; i++) {
 				var c = new FSOFile(files[i]);
 				c.update();
 				toret.Add(c);
@@ -46,14 +46,14 @@ namespace captainalm.integrator.verifier
 		public virtual FSOBase[] trawlRecursively() {
 			var toret = new List<FSOBase>();
 			var dirs = new List<String>(Directory.EnumerateFiles(path));
-			for (int i = 0; i < dirs.Count - 1; i++) {
+			for (int i = 0; i < dirs.Count; i++) {
 				var c = new FSODirectory(dirs[i]);
 				toret.AddRange(c.trawlRecursively());
 				c.update();
 				toret.Add(c);
 			}
 			var files = new List<String>(Directory.EnumerateFiles(path));
-			for (int i = 0; i < files.Count - 1; i++) {
+			for (int i = 0; i < files.Count; i++) {
 				var c = new FSOFile(files[i]);
 				c.update();
 				toret.Add(c);
@@ -65,7 +65,7 @@ namespace captainalm.integrator.verifier
 		public override void update()
 		{
 			exists = Directory.Exists(path);
-			for (int i = 0; i < subFSO.Count - 1; i++) {
+			for (int i = 0; i < subFSO.Count; i++) {
 				var c = subFSO[i];
 				c.update();
 			}
@@ -85,7 +85,7 @@ namespace captainalm.integrator.verifier
 		public override void updateHash()
 		{
 			var str = "";
-			for (int i = 0; i < subFSO.Count - 1; i++) {
+			for (int i = 0; i < subFSO.Count; i++) {
 				var c = subFSO[i];
 				str += c.Hash;
 			}
@@ -95,7 +95,7 @@ namespace captainalm.integrator.verifier
 		public override void updateSize()
 		{
 			size = 0;
-			for (int i = 0; i < subFSO.Count - 1; i++) {
+			for (int i = 0; i < subFSO.Count; i++) {
 				var c = subFSO[i];
 				size += c.Size;
 			}

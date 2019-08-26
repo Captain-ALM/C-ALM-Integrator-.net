@@ -157,7 +157,7 @@ namespace captainalm.integrator.verifier
 			}
 			if (argsParser.hasSwitchIgnoreCase("ip")) {
 				var switches = argsParser.get_argDataIgnoreCase("ip");
-				for (int i = 0; i < switches.Length - 1; i++) {
+				for (int i = 0; i < switches.Length; i++) {
 					if (! object.ReferenceEquals(null, switches[i])) {
 						includedPaths.Add(switches[i]);
 					} else {
@@ -166,7 +166,7 @@ namespace captainalm.integrator.verifier
 				}
 			} else if (argsParser.hasSwitchIgnoreCase("includepath")) {
 				var switches = argsParser.get_argDataIgnoreCase("includepath");
-				for (int i = 0; i < switches.Length - 1; i++) {
+				for (int i = 0; i < switches.Length; i++) {
 					if (! object.ReferenceEquals(null, switches[i])) {
 						includedPaths.Add(switches[i]);
 					} else {
@@ -176,7 +176,7 @@ namespace captainalm.integrator.verifier
 			}
 			if (argsParser.hasSwitchIgnoreCase("ep")) {
 				var switches = argsParser.get_argDataIgnoreCase("ep");
-				for (int i = 0; i < switches.Length - 1; i++) {
+				for (int i = 0; i < switches.Length; i++) {
 					if (! object.ReferenceEquals(null, switches[i])) {
 						excludedPaths.Add(switches[i]);
 					} else {
@@ -185,7 +185,7 @@ namespace captainalm.integrator.verifier
 				}
 			} else if (argsParser.hasSwitchIgnoreCase("excludepath")) {
 				var switches = argsParser.get_argDataIgnoreCase("excludepath");
-				for (int i = 0; i < switches.Length - 1; i++) {
+				for (int i = 0; i < switches.Length; i++) {
 					if (! object.ReferenceEquals(null, switches[i])) {
 						excludedPaths.Add(switches[i]);
 					} else {
@@ -195,7 +195,7 @@ namespace captainalm.integrator.verifier
 			}
 			if (argsParser.hasSwitchIgnoreCase("ia")) {
 				var switches = argsParser.get_argDataIgnoreCase("ia");
-				for (int i = 0; i < switches.Length - 1; i++) {
+				for (int i = 0; i < switches.Length; i++) {
 					if (! object.ReferenceEquals(null, switches[i])) {
 						includedAttributes.Add(parseAttributes(switches[i]));
 					} else {
@@ -204,7 +204,7 @@ namespace captainalm.integrator.verifier
 				}
 			} else if (argsParser.hasSwitchIgnoreCase("includeattributes")) {
 				var switches = argsParser.get_argDataIgnoreCase("includeattributes");
-				for (int i = 0; i < switches.Length - 1; i++) {
+				for (int i = 0; i < switches.Length; i++) {
 					if (! object.ReferenceEquals(null, switches[i])) {
 						includedAttributes.Add(parseAttributes(switches[i]));
 					} else {
@@ -214,7 +214,7 @@ namespace captainalm.integrator.verifier
 			}
 			if (argsParser.hasSwitchIgnoreCase("ea")) {
 				var switches = argsParser.get_argDataIgnoreCase("ea");
-				for (int i = 0; i < switches.Length - 1; i++) {
+				for (int i = 0; i < switches.Length; i++) {
 					if (! object.ReferenceEquals(null, switches[i])) {
 						excludedAttributes.Add(parseAttributes(switches[i]));
 					} else {
@@ -223,7 +223,7 @@ namespace captainalm.integrator.verifier
 				}
 			} else if (argsParser.hasSwitchIgnoreCase("excludeattributes")) {
 				var switches = argsParser.get_argDataIgnoreCase("excludeattributes");
-				for (int i = 0; i < switches.Length - 1; i++) {
+				for (int i = 0; i < switches.Length; i++) {
 					if (! object.ReferenceEquals(null, switches[i])) {
 						excludedAttributes.Add(parseAttributes(switches[i]));
 					} else {
@@ -235,7 +235,7 @@ namespace captainalm.integrator.verifier
 		}
 		
 		static void runtime() {
-			for (int i = 0; i < setup.Count - 1; i++) {
+			for (int i = 0; i < setup.Count; i++) {
 				var c = setup[i];
 				switch (c) {
 					case setups.Create:
@@ -264,7 +264,7 @@ namespace captainalm.integrator.verifier
 			objs.AddRange(subObjs);
 			var pro = doPromptsAndInclusionsAndExclusions(objs, prompt);
 			side1 = new Integrator(integratorTypes, 1, pro.Count);
-			for (int i = 0; i < pro.Count - 1; i++) {
+			for (int i = 0; i < pro.Count; i++) {
 				side1.set_block(0,i,pro[i].createElements());
 			}
 			if (serializeIntegration) {
@@ -300,20 +300,20 @@ namespace captainalm.integrator.verifier
 			var indxs2 = side1.findElements(new FSOTypeElement(FSOType.RootFile));
 			var bsObjs = new List<FSODirectory>();
 			var bsObjs2 = new List<FSOFile>();
-			for (int i = 0; i < indxs.Length - 1; i++) {
+			for (int i = 0; i < indxs.Length; i++) {
 				var cindxs = indxs[i];
 				bsObjs.Add(new FSODirectory(side1.get_block(cindxs[0], cindxs[1])));
 			}
-			for (int i = 0; i < indxs2.Length - 1; i++) {
+			for (int i = 0; i < indxs2.Length; i++) {
 				var cindxs = indxs2[i];
 				bsObjs2.Add(new FSOFile(side1.get_block(cindxs[0], cindxs[1])));
 			}
 			var objs2Add = new List<FSOBase>();
-			for (int i = 0; i < bsObjs.Count - 1; i++) {
+			for (int i = 0; i < bsObjs.Count; i++) {
 				objs2Add.AddRange(bsObjs[i].trawlRecursively());
 				bsObjs[i].update();
 			}
-			for (int i = 0; i < bsObjs2.Count - 1; i++) {
+			for (int i = 0; i < bsObjs2.Count; i++) {
 				bsObjs2[i].update();
 			}
 			var objs = new List<FSOBase>();
@@ -322,12 +322,12 @@ namespace captainalm.integrator.verifier
 			objs.AddRange(objs2Add);
 			var pro = doPromptsAndInclusionsAndExclusions(objs,false);
 			side2 = new Integrator(integratorTypes, 1, pro.Count);
-			for (int i = 0; i < pro.Count - 1; i++) {
+			for (int i = 0; i < pro.Count; i++) {
 				side2.set_block(0,i,pro[i].createElements());
 			}
 			Console.WriteLine("Verifying...");
 			var verstat = true;
-			for (int i = 0; i < side1.rowCount - 1; i++) {
+			for (int i = 0; i < side1.rowCount; i++) {
 				var ceblock = side1.get_block(0, i);
 				var csindx = findElementBlock(side2, (String)((StringElement)ceblock[1]).HeldElement);
 				if (csindx[0] == -1 || csindx[1] == -1) {
@@ -350,7 +350,7 @@ namespace captainalm.integrator.verifier
 					verstat = verstat && tsb;
 				}
 			}
-			for (int i = 0; i < side2.rowCount - 1; i++) {
+			for (int i = 0; i < side2.rowCount; i++) {
 				var ceblock = side2.get_block(0, i);
 				var csindx = findElementBlock(side1, (String)((StringElement)ceblock[1]).HeldElement);
 				if (csindx[0] == -1 || csindx[1] == -1) {
@@ -397,7 +397,7 @@ namespace captainalm.integrator.verifier
 		
 		static List<FSOBase> doPromptsAndInclusionsAndExclusions(List<FSOBase> dataIn, Boolean Prompt) {
 			var torem = new List<Int32>();
-			for (int i = 0; i < dataIn.Count - 1; i++) {
+			for (int i = 0; i < dataIn.Count; i++) {
 				var c = dataIn[i];
 				var res = false;
 				if (! excludedAttributes.Contains(c.Attributes)) {
@@ -426,7 +426,7 @@ namespace captainalm.integrator.verifier
 				}
 			}
 			torem.Reverse();
-			for (int i = 0; i < torem.Count - 1; i++) {
+			for (int i = 0; i < torem.Count; i++) {
 				dataIn.RemoveAt(torem[i]);
 			}
 			return dataIn;
@@ -434,7 +434,7 @@ namespace captainalm.integrator.verifier
 		
 		static Boolean isPath(List<String> pathsIn, String pToCheck) {
 			var toret = false;
-			for (int i = 0; i < pathsIn.Count - 1; i++) {
+			for (int i = 0; i < pathsIn.Count; i++) {
 				var c = pathsIn[i];
 				if (pToCheck == c) {
 					toret = true;
@@ -494,7 +494,7 @@ namespace captainalm.integrator.verifier
 		
 		static List<setups> parseSetups(String theArg) {
 			var toret = new List<setups>();
-			for (int i = 0; i < theArg.Length - 1; i++) {
+			for (int i = 0; i < theArg.Length; i++) {
 				var c = theArg.ToLower()[i];
 				switch (c) {
 					case 'c':
@@ -513,7 +513,7 @@ namespace captainalm.integrator.verifier
 		
 		static FileAttributes parseAttributes(String theArg) {
 			var toret = (FileAttributes) 0;
-			for (int i = 0; i < theArg.Length - 1; i++) {
+			for (int i = 0; i < theArg.Length; i++) {
 				var c = theArg.ToLower()[i];
 				addAnotherAttribute(toret, c);
 			}

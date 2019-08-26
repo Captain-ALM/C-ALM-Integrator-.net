@@ -23,7 +23,7 @@ namespace captainalm.integrator.verifier
 			var intArgData = new List<Tuple<String, String>>();
 			String cc = "";
 			Boolean na = false;
-			for (int i = 0; i < parseIn.Length - 1; i++) {
+			for (int i = 0; i < parseIn.Length; i++) {
 				var c = parseIn[i];
 				if (! na) {
 					if (c.EndsWith(switchArgShower.ToString())) {
@@ -37,7 +37,7 @@ namespace captainalm.integrator.verifier
 					intArgData.Add(new Tuple<String, String>(cc,c));
 				}
 			}
-			for (int i = 0; i < intArgData.Count - 1; i++) {
+			for (int i = 0; i < intArgData.Count; i++) {
 				var c = intArgData[i];
 				if (_argdata.ContainsKey(c.Item1)) {
 					_argdata[c.Item1].Add(c.Item2);
@@ -65,7 +65,7 @@ namespace captainalm.integrator.verifier
 			var bconvt = new String[_argdata.Keys.Count];
 			_argdata.Keys.CopyTo(bconvt,0);
 			var convt = new Dictionary<String, List<String>>();
-			for (int i = 0; i < bconvt.Length - 1; i++) {
+			for (int i = 0; i < bconvt.Length; i++) {
 				convt.Add(bconvt[i].ToLower(),_argdata[bconvt[i]]);
 			}
 			if (convt.ContainsKey(Switch.ToLower())) {
@@ -104,7 +104,7 @@ namespace captainalm.integrator.verifier
 			var bconvt = new String[_argdata.Keys.Count];
 			_argdata.Keys.CopyTo(bconvt,0);
 			var convt = new List<String>();
-			for (int i = 0; i < bconvt.Length - 1; i++) {
+			for (int i = 0; i < bconvt.Length; i++) {
 				convt.Add(bconvt[i].ToLower());
 			}
 			return convt.Contains(Switch.ToLower());

@@ -117,7 +117,7 @@ namespace captainalm.integrator
 			try {
 				XMLIntegration xtoret = null;
 				sw.AutoFlush = true;
-				for (int i = 0; i < _data.Length - 1; i++) {
+				for (int i = 0; i < _data.Length; i++) {
 					sw.Write(_data[i]);
 				}
 				if (! sw.AutoFlush) {sw.Flush();}
@@ -189,9 +189,9 @@ namespace captainalm.integrator
 				indexCount = iIn.blockTypes.Length;
 				types = System.Convert.ToBase64String(Serializer.serialize(iIn.blockTypes));
 				rows = new XRow[iIn.rowCount];
-				for (int i = 0; i < iIn.rowCount - 1; i++) {
+				for (int i = 0; i < iIn.rowCount; i++) {
 					var tr = new List<List<IElement>>();
-					for (int j = 0; j < iIn.blockCount - 1; j++) {
+					for (int j = 0; j < iIn.blockCount; j++) {
 						tr.Add(new List<IElement>(iIn.get_block(j, i)));
 					}
 					rows[i] = new XRow(tr);
@@ -202,12 +202,12 @@ namespace captainalm.integrator
 				var tps = Serializer.deSerialize(System.Convert.FromBase64String(types)) as Type[];
 				var toret = new Integrator(tps, blockCount, rowCount);
 				var lstm = new List<List<List<IElement>>>();
-				for (int i = 0; i < rows.Length - 1; i++) {
+				for (int i = 0; i < rows.Length; i++) {
 					lstm.Add(rows[i].toRow(tps));
 				}
-				for (int i = 0; i < rowCount - 1; i++) {
-					for (int j = 0; j < blockCount - 1; j++) {
-						for (int k = 0; k < tps.Length - 1; k++) {
+				for (int i = 0; i < rowCount; i++) {
+					for (int j = 0; j < blockCount; j++) {
+						for (int k = 0; k < tps.Length; k++) {
 							toret.set_element(j,i,k,lstm[i][j][k]);
 						}
 					}
@@ -223,14 +223,14 @@ namespace captainalm.integrator
 				public XRow() {}
 				public XRow(List<List<IElement>> lleIn) {
 					blocks = new XBlock[lleIn.Count];
-					for (int i = 0; i < lleIn.Count - 1; i++) {
+					for (int i = 0; i < lleIn.Count; i++) {
 						blocks[i] = new XBlock(lleIn[i]);
 					}
 				}
 				
 				public List<List<IElement>> toRow(Type[] eTypesIn) {
 					var toret = new List<List<IElement>>();
-					for (int i = 0; i < blocks.Length - 1; i++) {
+					for (int i = 0; i < blocks.Length; i++) {
 						toret.Add(blocks[i].toBlock(eTypesIn));
 					}
 					return toret;
@@ -244,14 +244,14 @@ namespace captainalm.integrator
 					public XBlock() {}
 					public XBlock(List<IElement> leIn) {
 						elements = new XElement[leIn.Count];
-						for (int i = 0; i < leIn.Count - 1; i++) {
+						for (int i = 0; i < leIn.Count; i++) {
 							elements[i] = new XElement(leIn[i]);
 						}
 					}
 					
 					public List<IElement> toBlock(Type[] eTypesIn) {
 						var toret = new List<IElement>();
-						for (int i = 0; i < elements.Length - 1; i++) {
+						for (int i = 0; i < elements.Length; i++) {
 							toret.Add(elements[i].toElement(eTypesIn[i]));
 						}
 						return toret;

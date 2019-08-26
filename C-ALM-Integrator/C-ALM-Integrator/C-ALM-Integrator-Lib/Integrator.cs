@@ -26,7 +26,7 @@ namespace captainalm.integrator
 		Int32 _blocks = 0;
 		private List<IElement> generateBlock() {
 			var lstb = new List<IElement>();
-			for (int l = 0; l < _blocktypes.Length - 1; l++) {
+			for (int l = 0; l < _blocktypes.Length; l++) {
 				lstb.Add(null);
 			}
 			return lstb;
@@ -263,7 +263,7 @@ namespace captainalm.integrator
 		/// <remarks></remarks>
 		public void addBlock() {
 			lock (slockop) {
-				for (int k = 0; k < _rows - 1; k++) {
+				for (int k = 0; k < _rows; k++) {
 					data[k].Add(generateBlock());
 				}
 				_blocks += 1;
@@ -293,7 +293,7 @@ namespace captainalm.integrator
 		public void insertBlock(Int32 index) {
 			if (index < 0 || index > _blocks - 1) {throw new ArgumentOutOfRangeException("index");}
 			lock (slockop) {
-				for (int k = 0; k < _rows - 1; k++) {
+				for (int k = 0; k < _rows; k++) {
 					data[k].Insert(index,generateBlock());
 				}
 				_blocks += 1;
@@ -317,7 +317,7 @@ namespace captainalm.integrator
 		public void removeLastBlock() {
 			if (_blocks - 1 < 0) {return;}
 			lock (slockop) {
-				for (int k = 0; k < _rows - 1; k++) {
+				for (int k = 0; k < _rows; k++) {
 					data[k].RemoveAt(_blocks - 1);
 				}
 				_blocks -= 1;
@@ -343,7 +343,7 @@ namespace captainalm.integrator
 		public void removeBlock(Int32 index) {
 			if (index < 0 || index > _blocks - 1) {throw new ArgumentOutOfRangeException("index");}
 			lock (slockop) {
-				for (int k = 0; k < _rows - 1; k++) {
+				for (int k = 0; k < _rows; k++) {
 					data[k].RemoveAt(index);
 				}
 				_blocks -= 1;
@@ -371,9 +371,9 @@ namespace captainalm.integrator
 			var toret = new Int32[] {-1,-1,-1};
 			lock (slockop) {
 				bool exitpls = false;
-				for (int j = 0; j < _rows - 1; j++) {
-					for (int k = 0; k < _blocks - 1; k++) {
-						for (int l = 0; l < _blocktypes.Length - 1; l++) {
+				for (int j = 0; j < _rows; j++) {
+					for (int k = 0; k < _blocks; k++) {
+						for (int l = 0; l < _blocktypes.Length; l++) {
 							if (! Object.Equals(null, data[j][k][l])) {
 								if (Object.Equals(data[j][k][l], element)) {
 									toret[0] = k;
@@ -402,9 +402,9 @@ namespace captainalm.integrator
 			if (object.ReferenceEquals(null, element)) {throw new ArgumentNullException("element");}
 			var toret = new List<Int32[]>();
 			lock (slockop) {
-				for (int j = 0; j < _rows - 1; j++) {
-					for (int k = 0; k < _blocks - 1; k++) {
-						for (int l = 0; l < _blocktypes.Length - 1; l++) {
+				for (int j = 0; j < _rows; j++) {
+					for (int k = 0; k < _blocks; k++) {
+						for (int l = 0; l < _blocktypes.Length; l++) {
 							if (! Object.Equals(null, data[j][k][l])) {
 								if (Object.Equals(data[j][k][l], element)) {
 									var ctr = new Int32[] {k,j,l};
@@ -426,9 +426,9 @@ namespace captainalm.integrator
 			var toret = new Int32[] {-1,-1,-1};
 			lock (slockop) {
 				bool exitpls = false;
-				for (int j = 0; j < _rows - 1; j++) {
-					for (int k = 0; k < _blocks - 1; k++) {
-						for (int l = 0; l < _blocktypes.Length - 1; l++) {
+				for (int j = 0; j < _rows; j++) {
+					for (int k = 0; k < _blocks; k++) {
+						for (int l = 0; l < _blocktypes.Length; l++) {
 							if (Object.Equals(null, data[j][k][l])) {
 								toret[0] = k;
 								toret[1] = j;
@@ -453,9 +453,9 @@ namespace captainalm.integrator
 		public Int32[][] findNulls() {
 			var toret = new List<Int32[]>();
 			lock (slockop) {
-				for (int j = 0; j < _rows - 1; j++) {
-					for (int k = 0; k < _blocks - 1; k++) {
-						for (int l = 0; l < _blocktypes.Length - 1; l++) {
+				for (int j = 0; j < _rows; j++) {
+					for (int k = 0; k < _blocks; k++) {
+						for (int l = 0; l < _blocktypes.Length; l++) {
 							if (Object.Equals(null, data[j][k][l])) {
 								var ctr = new Int32[] {k,j,l};
 								toret.Add(ctr);
@@ -503,16 +503,16 @@ namespace captainalm.integrator
 		public Int32[] findElementBlock(IElement[] elementBlockIn) {
 			if (object.ReferenceEquals(null, elementBlockIn)) {throw new ArgumentNullException("elementBlockIn");}
 			if (elementBlockIn.Length != _blocktypes.Length) {throw new ArgumentException("elementBlockIn");}
-			for (int i = 0; i < elementBlockIn.Length - 1; i++) {
+			for (int i = 0; i < elementBlockIn.Length; i++) {
 				if (object.ReferenceEquals(null, elementBlockIn[i])) {throw new ArgumentException("elementBlockIn");}
 			}
 			var toret = new Int32[] {-1,-1};
 			lock (slockop) {
 				bool exitpls = false;
-				for (int j = 0; j < _rows - 1; j++) {
-					for (int k = 0; k < _blocks - 1; k++) {
+				for (int j = 0; j < _rows; j++) {
+					for (int k = 0; k < _blocks; k++) {
 						var ists = false;
-						for (int l = 0; l < _blocktypes.Length - 1; l++) {
+						for (int l = 0; l < _blocktypes.Length; l++) {
 							if (! Object.Equals(null, data[j][k][l])) {
 								if (Object.Equals(data[j][k][l], elementBlockIn[l])) {
 									ists = true;
@@ -547,15 +547,15 @@ namespace captainalm.integrator
 		public Int32[][] findElementBlocks(IElement[] elementBlockIn) {
 			if (object.ReferenceEquals(null, elementBlockIn)) {throw new ArgumentNullException("elementBlockIn");}
 			if (elementBlockIn.Length != _blocktypes.Length) {throw new ArgumentException("elementBlockIn");}
-			for (int i = 0; i < elementBlockIn.Length - 1; i++) {
+			for (int i = 0; i < elementBlockIn.Length; i++) {
 				if (object.ReferenceEquals(null, elementBlockIn[i])) {throw new ArgumentException("elementBlockIn");}
 			}
 			var toret = new List<Int32[]>();
 			lock (slockop) {
-				for (int j = 0; j < _rows - 1; j++) {
-					for (int k = 0; k < _blocks - 1; k++) {
+				for (int j = 0; j < _rows; j++) {
+					for (int k = 0; k < _blocks; k++) {
 						var ists = false;
-						for (int l = 0; l < _blocktypes.Length - 1; l++) {
+						for (int l = 0; l < _blocktypes.Length; l++) {
 							if (! Object.Equals(null, data[j][k][l])) {
 								if (Object.Equals(data[j][k][l], elementBlockIn[l])) {
 									ists = true;

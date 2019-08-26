@@ -121,7 +121,7 @@ namespace captainalm.integrator.verifier
 			}
 			var toret = new Byte[toretlen];
 			cindx = 0;
-			for (int i = 0; i < datlst.Count - 1; i++) {
+			for (int i = 0; i < datlst.Count; i++) {
 				var cbts = datlst[i];
 				System.Buffer.BlockCopy(cbts, 0, toret, cindx, cbts.Length);
 				cindx += cbts.Length;

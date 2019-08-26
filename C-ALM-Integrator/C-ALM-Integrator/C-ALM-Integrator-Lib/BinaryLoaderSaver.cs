@@ -51,11 +51,11 @@ namespace captainalm.integrator
 			if (! object.ReferenceEquals(null, toSave)) {
 				var tps = toSave.blockTypes;
 				var lstts = new List<List<List<Byte[]>>>();
-				for (int i = 0; i < toSave.rowCount - 1; i++) {
+				for (int i = 0; i < toSave.rowCount; i++) {
 					var lsti = new List<List<Byte[]>>();
-					for (int j = 0; j < toSave.blockCount - 1; j++) {
+					for (int j = 0; j < toSave.blockCount; j++) {
 						var lstj = new List<Byte[]>();
-						for (int k = 0; k < toSave.blockTypes.Length - 1; k++) {
+						for (int k = 0; k < toSave.blockTypes.Length; k++) {
 							Byte[] btsk = null;
 							var ce = toSave.get_element(j, i, k);
 							if (! object.ReferenceEquals(null, ce)) {
@@ -103,9 +103,9 @@ namespace captainalm.integrator
 				if (rows < 1) {blocks = 0;} else {blocks = dst.Item2[0].Count;}
 				var blockSize = dst.Item1.Length;
 				var toret = new Integrator(dst.Item1, blocks,rows);
-				for (int i = 0; i < blocks - 1; i++) {
-					for (int j = 0; j < rows - 1; j++) {
-						for (int k = 0; k < blockSize - 1; k++) {
+				for (int i = 0; i < blocks; i++) {
+					for (int j = 0; j < rows; j++) {
+						for (int k = 0; k < blockSize; k++) {
 							var ctype = dst.Item1[k];
 							var cons = ctype.GetConstructor(Type.EmptyTypes);
 							IElement element = null;
