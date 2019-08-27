@@ -18,19 +18,20 @@ namespace captainalm.integrator.verifier
 	/// </summary>
 	static class Program
 	{
-		static StringArrayParser argsParser = null;
-		static String sourcePath = "";
-		static String integrationFile = "";
-		static List<String> includedPaths = new List<String>();
-		static List<String> excludedPaths = new List<String>();
-		static List<FileAttributes> includedAttributes = new List<FileAttributes>();
-		static List<FileAttributes> excludedAttributes = new List<FileAttributes>();
-		static Boolean prompt = false;
-		static Boolean serializeIntegration = false;
-		static List<setups> setup = new List<setups>();
-		static Integrator side1 = null;
-		static Integrator side2 = null;
-		static Type[] integratorTypes = new Type[] {typeof(FSOTypeElement), typeof(StringElement),typeof(DateTimeElement), typeof(StringElement), typeof(LongElement)};
+		public static StringArrayParser argsParser = null;
+        public static String sourcePath = "";
+        public static String integrationFile = "";
+        public static List<String> includedPaths = new List<String>();
+        public static List<String> excludedPaths = new List<String>();
+        public static List<FileAttributes> includedAttributes = new List<FileAttributes>();
+        public static List<FileAttributes> excludedAttributes = new List<FileAttributes>();
+        public static Boolean prompt = false;
+        public static Boolean serializeIntegration = false;
+        public static List<setups> setup = new List<setups>();
+        public static Integrator side1 = null;
+        public static Integrator side2 = null;
+        public static Boolean info = false;
+        public static Type[] integratorTypes = new Type[] { typeof(FSOTypeElement), typeof(StringElement), typeof(DateTimeElement), typeof(StringElement), typeof(LongElement) };
 		
 		public static void Main(string[] args)
 		{
@@ -44,6 +45,7 @@ namespace captainalm.integrator.verifier
 			} else {
 				prompt |= argsParser.hasSwitchIgnoreCase("p") || argsParser.hasSwitchIgnoreCase("prompt");
 				serializeIntegration |= argsParser.hasSwitchIgnoreCase("ser") || argsParser.hasSwitchIgnoreCase("serialize");
+                info |= argsParser.hasSwitchIgnoreCase("info") || argsParser.hasSwitchIgnoreCase("information");
 				if (argsParser.hasSwitch("?") || argsParser.hasSwitchIgnoreCase("h") || argsParser.hasSwitchIgnoreCase("help") || argsParser.hasSwitchIgnoreCase("u") || argsParser.hasSwitchIgnoreCase("usage")) {
 					displayHelp();
 					Environment.Exit(0);
@@ -235,6 +237,7 @@ namespace captainalm.integrator.verifier
 		}
 		
 		static void runtime() {
+			Directory.SetCurrentDirectory(sourcePath);
 			for (int i = 0; i < setup.Count; i++) {
 				var c = setup[i];
 				switch (c) {
@@ -256,16 +259,15 @@ namespace captainalm.integrator.verifier
 		
 		static void create() {
 			Console.WriteLine("Creating...");
-			var baseDir = new FSODirectory(sourcePath, FSOType.RootDirectory);
-			var subObjs = baseDir.trawlRecursively();
+            var baseDir = new FSODirectory(sourcePath, FSOType.RootDirectory) { Info = info };
+			var subObjs = baseDir.trawlRecursively(new NominalRTM(prompt), false);
 			baseDir.update();
 			var objs = new List<FSOBase>();
 			objs.Add(baseDir);
 			objs.AddRange(subObjs);
-			var pro = doPromptsAndInclusionsAndExclusions(objs, prompt);
-			side1 = new Integrator(integratorTypes, 1, pro.Count);
-			for (int i = 0; i < pro.Count; i++) {
-				side1.set_block(0,i,pro[i].createElements());
+			side1 = new Integrator(integratorTypes, 1, objs.Count);
+			for (int i = 0; i < objs.Count; i++) {
+				side1.set_block(0,i,objs[i].createElements());
 			}
 			if (serializeIntegration) {
 				var sav = new BinaryLoaderSaver();
@@ -302,15 +304,15 @@ namespace captainalm.integrator.verifier
 			var bsObjs2 = new List<FSOFile>();
 			for (int i = 0; i < indxs.Length; i++) {
 				var cindxs = indxs[i];
-				bsObjs.Add(new FSODirectory(side1.get_block(cindxs[0], cindxs[1])));
+                bsObjs.Add(new FSODirectory(side1.get_block(cindxs[0], cindxs[1])) { Info = info });
 			}
 			for (int i = 0; i < indxs2.Length; i++) {
 				var cindxs = indxs2[i];
-				bsObjs2.Add(new FSOFile(side1.get_block(cindxs[0], cindxs[1])));
+                bsObjs2.Add(new FSOFile(side1.get_block(cindxs[0], cindxs[1])) { Info = info });
 			}
 			var objs2Add = new List<FSOBase>();
 			for (int i = 0; i < bsObjs.Count; i++) {
-				objs2Add.AddRange(bsObjs[i].trawlRecursively());
+				objs2Add.AddRange(bsObjs[i].trawlRecursively(new NominalRTM(prompt), false));
 				bsObjs[i].update();
 			}
 			for (int i = 0; i < bsObjs2.Count; i++) {
@@ -320,10 +322,9 @@ namespace captainalm.integrator.verifier
 			objs.AddRange(bsObjs);
 			objs.AddRange(bsObjs2);
 			objs.AddRange(objs2Add);
-			var pro = doPromptsAndInclusionsAndExclusions(objs,false);
-			side2 = new Integrator(integratorTypes, 1, pro.Count);
-			for (int i = 0; i < pro.Count; i++) {
-				side2.set_block(0,i,pro[i].createElements());
+			side2 = new Integrator(integratorTypes, 1, objs.Count);
+			for (int i = 0; i < objs.Count; i++) {
+				side2.set_block(0,i,objs[i].createElements());
 			}
 			Console.WriteLine("Verifying...");
 			var verstat = true;
@@ -378,9 +379,9 @@ namespace captainalm.integrator.verifier
 		static FSOBase constructFSO(IElement[] elementsIn) {
 			var fsot = (FSOType)((FSOTypeElement)elementsIn[0]).HeldElement;
 			if (fsot == FSOType.RootDirectory || fsot == FSOType.Directory) {
-				return new FSODirectory(elementsIn);
+                return new FSODirectory(elementsIn) { Info = info };
 			} else if (fsot == FSOType.RootFile || fsot == FSOType.File) {
-				return new FSOFile(elementsIn);
+                return new FSOFile(elementsIn) { Info = info };
 			}
 			return null;
 		}
@@ -395,58 +396,6 @@ namespace captainalm.integrator.verifier
 			}
 		}
 		
-		static List<FSOBase> doPromptsAndInclusionsAndExclusions(List<FSOBase> dataIn, Boolean Prompt) {
-			var torem = new List<Int32>();
-			for (int i = 0; i < dataIn.Count; i++) {
-				var c = dataIn[i];
-				var res = false;
-				if (! excludedAttributes.Contains(c.Attributes)) {
-					res = includedAttributes.Count <= 0 || includedAttributes.Contains(c.Attributes);
-				} else {
-					res = false;
-				}
-				if (! isPath(excludedPaths, c.Path)) {
-					res = includedPaths.Count <= 0 || isPath(includedPaths, c.Path);
-				} else {
-					res = false;
-				}
-				if (res && Prompt) {
-					Console.WriteLine("Include: " + c.Path + " ?");
-					Console.WriteLine("[Else] Include, [E] Exclude, [X] Exit");
-					var rkey = Console.ReadKey();
-					if (rkey.Key == ConsoleKey.E) {
-						res = false;
-					} else if (rkey.Key == ConsoleKey.X) {
-						res = false;
-						Environment.Exit(0);
-					}
-				}
-				if (! res) {
-					torem.Add(i);
-				}
-			}
-			torem.Reverse();
-			for (int i = 0; i < torem.Count; i++) {
-				dataIn.RemoveAt(torem[i]);
-			}
-			return dataIn;
-		}
-		
-		static Boolean isPath(List<String> pathsIn, String pToCheck) {
-			var toret = false;
-			for (int i = 0; i < pathsIn.Count; i++) {
-				var c = pathsIn[i];
-				if (pToCheck == c) {
-					toret = true;
-					break;
-				} else if (pToCheck.StartsWith(c)) {
-					toret = true;
-					break;
-				}
-			}
-			return toret;
-		}
-		
 		static void displayHelp() {
 			Console.WriteLine("Usage:");
 			Console.WriteLine("C-ALM-Verifier.exe {[switch/=] [/arg] ...(Repeat)...}");
@@ -456,6 +405,7 @@ namespace captainalm.integrator.verifier
 			Console.WriteLine("set or setup : specifies the setup; %SETUPCODE%...(Repeat)...");
 			Console.WriteLine("i, int, integration, f, file : specifies the integration file; %PATH%");
 			Console.WriteLine("s, source, sd or sourcedirectory : specifies the source directory; %PATH%");
+            Console.WriteLine("info or information : enables the display of info.");
 			Console.WriteLine("p or prompt : enables prompting.");
 			Console.WriteLine("ser or serialize : enables integration serialization.");
 			Console.WriteLine("ip or includepath : specifies a path to include; %PATH%");
@@ -518,43 +468,61 @@ namespace captainalm.integrator.verifier
 			var toret = (FileAttributes) 0;
 			for (int i = 0; i < theArg.Length; i++) {
 				var c = theArg.ToLower()[i];
-				addAnotherAttribute(toret, c);
+				toret = addAnotherAttribute(toret, c);
 			}
 			return toret;
 		}
 		
 		static FileAttributes addAnotherAttribute(FileAttributes cfa, Char code) {
+            var toret = cfa;
 			switch (code) {
 				case '1':
-					return cfa | FileAttributes.Archive;
+					toret = (cfa | FileAttributes.Archive);
+                    break;
 				case '2':
-					return cfa | FileAttributes.Compressed;
+					toret = (cfa | FileAttributes.Compressed);
+                    break;
 				case '3':
-					return cfa | FileAttributes.Device;
+					toret = (cfa | FileAttributes.Device);
+                    break;
 				case '4':
-					return cfa | FileAttributes.Directory;
+					toret = (cfa | FileAttributes.Directory);
+                    break;
 				case '5':
-					return cfa | FileAttributes.Encrypted;
+					toret = (cfa | FileAttributes.Encrypted);
+                    break;
 				case '6':
-					return cfa | FileAttributes.Hidden;
+                    toret = (cfa | FileAttributes.Hidden);
+                    break;
 				case '7':
-					return cfa | FileAttributes.Normal;
+					toret = (cfa | FileAttributes.Normal);
+                    break;
 				case '8':
-					return cfa | FileAttributes.NotContentIndexed;
+					toret = (cfa | FileAttributes.NotContentIndexed);
+                    break;
 				case '9':
-					return cfa | FileAttributes.Offline;
+					toret = (cfa | FileAttributes.Offline);
+                    break;
 				case '0':
-					return cfa | FileAttributes.ReadOnly;
+					toret = (cfa | FileAttributes.ReadOnly);
+                    break;
 				case 'a':
-					return cfa | FileAttributes.ReparsePoint;
+					toret = (cfa | FileAttributes.ReparsePoint);
+                    break;
 				case 'b':
-					return cfa | FileAttributes.SparseFile;
+					toret = (cfa | FileAttributes.SparseFile);
+                    break;
 				case 'c':
-					return cfa | FileAttributes.System;
+					toret = (cfa | FileAttributes.System);
+                    break;
 				case 'd':
-					return cfa | FileAttributes.Temporary;
+					toret = (cfa | FileAttributes.Temporary);
+                    break;
+                default:
+                    toret = cfa;
+                    break;
 			}
-			return cfa;
+            return toret;
 		}
 	}
 	

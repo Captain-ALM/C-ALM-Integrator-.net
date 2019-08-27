@@ -13,7 +13,6 @@ using System.Collections.Generic;
 
 namespace captainalm.integrator.verifier
 {
-	[Serializable]
 	/// <summary>
 	/// File System Object Base.
 	/// </summary>
@@ -25,6 +24,7 @@ namespace captainalm.integrator.verifier
 		protected Int64 size = 0;
 		protected FSOType type = FSOType.None;
 		protected Boolean exists = false;
+        protected Boolean info = false;
 		
 		public FSOBase(String pathIn, FSOType typeIn)
 		{
@@ -95,6 +95,16 @@ namespace captainalm.integrator.verifier
 				return type;
 			}
 		}
+
+        public virtual Boolean Info
+        {
+            get {
+                return info;
+            }
+            set {
+                info = value;
+            }
+        }
 		
 		protected virtual Byte[] hashProcessor(Byte[] dataIn) {
 			var datlst = new List<Byte[]>();

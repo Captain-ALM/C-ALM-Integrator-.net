@@ -23,6 +23,7 @@ namespace captainalm.integrator.verifier
 
 		public override void update()
 		{
+            if (info) { Console.WriteLine("Updating: " + path); }
 			exists = File.Exists(path);
 			if (exists) {base.update();}
 		}
@@ -59,7 +60,7 @@ namespace captainalm.integrator.verifier
 		
 		public override FileAttributes Attributes {
 			get {
-				if (exists) {
+				if (File.Exists(path)) {
 					var toret = FileAttributes.Normal;
 					var fi = new FileInfo(path);
 					fi.Refresh();

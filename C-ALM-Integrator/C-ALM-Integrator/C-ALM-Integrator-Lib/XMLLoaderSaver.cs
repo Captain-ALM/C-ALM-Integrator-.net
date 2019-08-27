@@ -124,11 +124,7 @@ namespace captainalm.integrator
 				sw.AutoFlush = false;
 				ms.Position = 0;
 				xtoret = xf.Deserialize(ms) as XMLIntegration;
-				if (! object.ReferenceEquals(null, xtoret)) {
-					toret = xtoret.toIntegrator();
-				} else {
-					toret = null;
-				}
+				toret = !object.ReferenceEquals(null, xtoret) ? xtoret.toIntegrator() : null;
 			} catch (System.Text.EncoderFallbackException e) {
 				toret = null;
 				sw.Dispose();
@@ -171,7 +167,7 @@ namespace captainalm.integrator
 		
 		#endregion
 		
-		[XmlRootAttribute("Integration", Namespace="http://www.cpandl.com", IsNullable = false)]
+		[XmlRootAttribute("Integration", Namespace="captainalm.integrator", IsNullable = false)]
 		public sealed class XMLIntegration {
 			[XmlArray("rows")]
 			public XRow[] rows;
@@ -214,8 +210,7 @@ namespace captainalm.integrator
 				}
 				return toret;
 			}
-			
-			[XmlRootAttribute("Row", Namespace="http://www.cpandl.com", IsNullable = false)]
+			[XmlTypeAttribute("Row", Namespace="captainalm.integrator")]
 			public sealed class XRow {
 				[XmlArray("blocks")]
 				public XBlock[] blocks;
@@ -236,7 +231,7 @@ namespace captainalm.integrator
 					return toret;
 				}
 				
-				[XmlRootAttribute("Block", Namespace="http://www.cpandl.com", IsNullable = false)]
+				[XmlTypeAttribute("Block", Namespace="captainalm.integrator")]
 				public sealed class XBlock {
 					[XmlArray("elements")]
 					public XElement[] elements;
@@ -257,7 +252,7 @@ namespace captainalm.integrator
 						return toret;
 					}
 					
-					[XmlRootAttribute("Element", Namespace="http://www.cpandl.com", IsNullable = false)]
+					[XmlTypeAttribute("Element", Namespace="captainalm.integrator")]
 					public sealed class XElement {
 						public string data;
 						
