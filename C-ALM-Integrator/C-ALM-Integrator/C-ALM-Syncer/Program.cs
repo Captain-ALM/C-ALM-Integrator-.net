@@ -33,6 +33,8 @@ namespace captainalm.integrator.syncer
 		public static Integrator side2 = null;
 		public static Boolean info = false;
 		public static Type[] integratorTypes = new Type[] { typeof(FSOTypeElement), typeof(StringElement), typeof(DateTimeElement), typeof(StringElement), typeof(LongElement) };
+		public static List<diffObj> diffHolder = new List<diffObj>();
+		public static modes transferMode = modes.Copy;
 		
 		public static void Main(string[] args)
 		{
@@ -91,6 +93,21 @@ namespace captainalm.integrator.syncer
 					setup = parseSetups(switches[0]);
 				} else {
 					throw new ArgumentException("setup");
+				}
+			}
+			if (argsParser.hasSwitchIgnoreCase("m")) {
+				var switches = argsParser.get_argDataIgnoreCase("m");
+				if (! object.ReferenceEquals(null, switches[0])) {
+					transferMode = parseMode(switches[0]);
+				} else {
+					throw new ArgumentException("m");
+				}
+			} else if (argsParser.hasSwitchIgnoreCase("mode")) {
+				var switches = argsParser.get_argDataIgnoreCase("mode");
+				if (! object.ReferenceEquals(null, switches[0])) {
+					transferMode = parseMode(switches[0]);
+				} else {
+					throw new ArgumentException("mode");
 				}
 			}
 			if (argsParser.hasSwitchIgnoreCase("i")) {
@@ -280,18 +297,52 @@ namespace captainalm.integrator.syncer
 					case setups.Update:
 						update();
 						break;
+					case setups.Diff:
+						diff();
+						break;
 				}
 			}
 		}
 		
 		static void diff() {
 			Console.WriteLine("Processing Diff...");
-			side2 = unify(createSyncMap(sourcePath1),createSyncMap(sourcePath2));
+			diffHolder.Clear();
+			//File processor only supports 1 root directory per block (Unlike C-ALM Verifier)
+			var indxs = side1.findElements(new FSOTypeElement(FSOType.RootDirectory));
+			int[] indx0 = null;
+			bool indx0d = false;
+			bool indx1d = false;
+			int[] indx1 = null;
+			for (int i = 0; i < indxs.Length; i++) {
+				var c = indxs[i];
+				if (c[1] == 0 && ! indx0d) {
+					indx0 = c;
+					indx0d = true;
+				} else if (c[1] == 1 && !indx1d) {
+					indx1 = c;
+					indx1d = true;
+				}
+			}
+			if (! (indx0d) || ! (indx1d)) {throw new InvalidOperationException("One of the blocks does not have a root directory.");}
+			var fbsdir0 = constructFSO(side1.get_block(indx0[0], indx0[1]));
+			var fbsdir1 = constructFSO(side1.get_block(indx1[0], indx1[1]));
+			side2 = unify(createSyncMap(fbsdir0.Path),createSyncMap(fbsdir1.Path), fbsdir0.Path, fbsdir1.Path);
+			for (int i = 0; i < side2.rowCount; i++) {
+				var obj0 = constructFSO(side2.get_block(0, i));
+				var obj1 = constructFSO(side2.get_block(1, i));
+				var rels = convertToRelative(new List<FSOBase>(new FSOBase[] {obj0, obj1}));
+				if (rels[0] != rels[1]) {throw new InvalidOperationException("The relative paths are not equal.");}
+				var pref = -1;
+				(pref == -1) ? ((obj0.LastModified < obj1.LastModified) ? pref = 1 : ((obj0.LastModified > obj1.LastModified) ? pref = 0 : pref = -1)) : pref = -1;
+				(pref == -1) ? ((obj0.Size < obj1.Size) ? pref = 1 : ((obj0.Size > obj1.Size) ? pref = 0 : pref = -1)) : pref = -1;
+				if (obj0.Hash == obj1.Hash) {pref = -1;}
+				diffHolder.Add(new diffObj(rels[0], obj0, obj1, pref));
+			}
 		}
 		
 		static void create() {
 			Console.WriteLine("Creating...");
-			side1 = unify(createSyncMap(sourcePath1),createSyncMap(sourcePath2));
+			side1 = unify(createSyncMap(sourcePath1),createSyncMap(sourcePath2), sourcePath1, sourcePath2);
 			if (serializeIntegration) {
 				var sav = new BinaryLoaderSaver();
 				side1.save(sav);
@@ -333,6 +384,7 @@ namespace captainalm.integrator.syncer
 		}
 		
 		static List<FSOBase> createSyncMap(String pathIn) {
+			if (info) {Console.WriteLine("Creating Sync Map for: " + pathIn);}
 			var baseDir = new FSODirectory(pathIn, FSOType.RootDirectory) { Info = info };
 			var subObjs = baseDir.trawlRecursively(new NominalRTM(prompt), false);
 			baseDir.update();
@@ -345,40 +397,44 @@ namespace captainalm.integrator.syncer
 		static List<String> convertToRelative(List<FSOBase> fsobjsIn, String baseIn) {
 			var toret = new List<String>();
 			for (int i = 0; i < fsobjsIn.Count; i++) {
+				if (info) {Console.WriteLine("Converting to relative: " + fsobjsIn[i]);}
 				toret.Add(fsobjsIn[i].Path.Replace(baseIn, ""));
 			}
 			return toret;
 		}
-		static Integrator unify(List<FSOBase> block0, List<FSOBase> block1) {
-			var block0r = convertToRelative(block0, sourcePath1);
-			var block1r = convertToRelative(block1, sourcePath2);
+		static Integrator unify(List<FSOBase> block0, List<FSOBase> block1, String basePath1, String basePath2) {
+			var block0r = convertToRelative(block0, basePath1);
+			var block1r = convertToRelative(block1, basePath2);
 			var unityr = new List<string>();
 			for (int i = 0; i < block0r.Count; i++) {
+				if (info) {Console.WriteLine("Unifying: Phase 0: " + block0r[i]);}
 				if(! unityr.Contains(block0r[i])) {
 					unityr.Add(block0r[i]);
 				}
 			}
 			for (int i = 0; i < block1r.Count; i++) {
+				if (info) {Console.WriteLine("Unifying: Phase 1: " + block1r[i]);}
 				if(! unityr.Contains(block1r[i])) {
 					unityr.Add(block1r[i]);
 				}
 			}
 			var INT = new Integrator(integratorTypes, 2, unityr.Count);
 			for (int i = 0; i < unityr.Count; i++) {
+				if (info) {Console.WriteLine("Unifying: Phase 2: " + unityr[i]);}
 				var indx0 = block0r.IndexOf(unityr[i]);
 				var indx1 = block1r.IndexOf(unityr[i]);
 				if (indx0 == -1) {
 					if (block1[indx1].Type == FSOType.Directory || block1[indx1].Type == FSOType.RootDirectory) {
-						INT.set_block(0,i,new FSODirectory(Path.Combine(sourcePath1, unityr[i]), block1[indx1].Type).createElements());
+						INT.set_block(0,i,new FSODirectory(Path.Combine(basePath1, unityr[i]), block1[indx1].Type).createElements());
 					} else if(block1[indx1].Type == FSOType.File || block1[indx1].Type == FSOType.RootFile) {
-						INT.set_block(0,i,new FSOFile(Path.Combine(sourcePath1, unityr[i]), block1[indx1].Type).createElements());
+						INT.set_block(0,i,new FSOFile(Path.Combine(basePath1, unityr[i]), block1[indx1].Type).createElements());
 					}
 					INT.set_block(1,i,block1[indx1].createElements());
 				} else if(indx1 == -1) {
 					if (block0[indx0].Type == FSOType.Directory || block0[indx0].Type == FSOType.RootDirectory) {
-						INT.set_block(1,i,new FSODirectory(Path.Combine(sourcePath2, unityr[i]), block0[indx0].Type).createElements());
+						INT.set_block(1,i,new FSODirectory(Path.Combine(basePath2, unityr[i]), block0[indx0].Type).createElements());
 					} else if(block0[indx0].Type == FSOType.File || block0[indx0].Type == FSOType.RootFile) {
-						INT.set_block(1,i,new FSOFile(Path.Combine(sourcePath2, unityr[i]), block0[indx0].Type).createElements());
+						INT.set_block(1,i,new FSOFile(Path.Combine(basePath2, unityr[i]), block0[indx0].Type).createElements());
 					}
 					INT.set_block(0,i,block0[indx0].createElements());
 				} else {
@@ -411,11 +467,12 @@ namespace captainalm.integrator.syncer
 		
 		static void displayHelp() {
 			Console.WriteLine("Usage:");
-			Console.WriteLine("C-ALM-Verifier.exe {[switch/=] [/arg] ...(Repeat)...}");
+			Console.WriteLine("C-ALM-Syncer.exe {[switch/=] [/arg] ...(Repeat)...}");
 			Console.WriteLine("/ denotes optional part.");
 			Console.WriteLine("Switches ; Argument Reference Link:");
 			Console.WriteLine("?, u, usage, h or help : shows this message.");
 			Console.WriteLine("set or setup : specifies the setup; %SETUPCODE%...(Repeat)...");
+			Console.WriteLine("m or mode : specifies the mode of transfer; %TRANSFERCODE%");
 			Console.WriteLine("i, int, integration, f, file : specifies the integration file; %PATH%");
 			Console.WriteLine("s1, source1, sd1 or sourcedirectory1 : specifies the source directory for block 0; %PATH%");
 			Console.WriteLine("s2, source1, sd2 or sourcedirectory2 : specifies the source directory for block 1; %PATH%");
@@ -435,6 +492,9 @@ namespace captainalm.integrator.syncer
 			Console.WriteLine("S : Sync.");
 			Console.WriteLine("1 : Sync to block 0.");
 			Console.WriteLine("2 : Sync to block 1.");
+			Console.WriteLine("%TRANSFERCODE%:");
+			Console.WriteLine("C : Copy.");
+			Console.WriteLine("G : Read into memory and then write from memory.");
 			Console.WriteLine("%PATH%:");
 			Console.WriteLine("* : specifies a path to a folder or file.");
 			Console.WriteLine("%ATTRIBUTE%:");
@@ -495,6 +555,20 @@ namespace captainalm.integrator.syncer
 			for (int i = 0; i < theArg.Length; i++) {
 				var c = theArg.ToLower()[i];
 				toret = addAnotherAttribute(toret, c);
+			}
+			return toret;
+		}
+		
+		static modes parseMode(String theArg) {
+			var toret = modes.Copy;
+			var c = theArg.ToLower()[i];
+			switch (c) {
+				case 'c':
+					toret = modes.Copy;
+					break;
+				case 'g':
+					toret = modes.Get;
+					break;
 			}
 			return toret;
 		}
@@ -560,5 +634,25 @@ namespace captainalm.integrator.syncer
 		Sync = 5,
 		SyncTo1 = 6,
 		SyncTo2 = 7
+	}
+	
+	struct diffObj {
+		public string relPath;
+		public FSOBase obj0;
+		public FSOBase obj1;
+		public bool exist0;
+		public bool exist1;
+		public Int32 pref;
+		public diffObj(string pathIn,FSOBase o0, FSOBase o1, Int32 p) {
+			relPath = pathIn;
+			exist0 = o0.Exists;
+			exist1 = o1.Exists;
+			if (p >= -1 && p <= 1) {pref = p;} else {pref = -1;}
+		}
+	}
+	
+	enum modes {
+		Copy = 1,
+		Get = 2
 	}
 }

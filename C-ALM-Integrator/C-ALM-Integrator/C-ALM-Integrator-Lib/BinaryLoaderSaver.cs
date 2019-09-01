@@ -155,7 +155,7 @@ namespace captainalm.integrator
 				}
 			}
 		}
-		
+		[Serializable]
 		protected sealed class NullElement : IElement {
 			public NullElement() {}
 

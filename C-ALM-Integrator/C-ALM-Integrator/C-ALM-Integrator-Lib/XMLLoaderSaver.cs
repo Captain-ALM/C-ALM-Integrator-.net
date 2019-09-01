@@ -320,7 +320,7 @@ namespace captainalm.integrator
 				}
 			}
 		}
-		
+		[Serializable]
 		public sealed class NullElement : IElement {
 			public NullElement() {}
 
