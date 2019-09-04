@@ -12,7 +12,6 @@ using System.IO;
 
 namespace captainalm.integrator.syncer
 {
-	
 	/// <summary>
 	/// Main Execution Class.
 	/// </summary>
@@ -300,8 +299,223 @@ namespace captainalm.integrator.syncer
 					case setups.Diff:
 						diff();
 						break;
+					case setups.SyncTo1:
+						syncTo1();
+						break;
+					case setups.SyncTo2:
+						syncTo2();
+						break;
+					case setups.Sync:
+						sync();
+						break;
 				}
 			}
+		}
+		
+		static void sync() {
+			Console.WriteLine("Syncing...");
+			var tv = new NominalRTM();
+			for (int i = 0; i < diffHolder.Count; i++) {
+				var cd = diffHolder[i];
+				if (info) {Console.WriteLine("Syncing: " + cd.relPath);}
+				var dopref = cd.pref;
+				if (prompt) {
+					Console.WriteLine("Sync: " + cd.relPath + " ?");
+					var pref = (cd.pref == -1) ? "Skip" : cd.pref.ToString();
+					Console.WriteLine("Prefered Block: " + pref);
+					Console.WriteLine("[Else] Skip, [0] Sync To 0, [1] Sync To 1, [P] Sync To Prefered, [X] Exit");
+					var rkey = Console.ReadKey();
+					Console.WriteLine();
+					if (rkey.Key == ConsoleKey.D0 )
+					{
+						dopref = 0;
+					}
+					else if (rkey.Key == ConsoleKey.D1 )
+					{
+						dopref = 1;
+					}
+					else if (rkey.Key == ConsoleKey.P )
+					{
+						dopref = cd.pref;
+					}
+					else if (rkey.Key == ConsoleKey.X)
+					{
+						dopref = -1;
+						Environment.Exit(0);
+					} else {
+						dopref = -1;
+					}
+				}
+				if ((! cd.same) && cd.exist0 && (cd.obj0.Type != FSOType.Directory || cd.obj0.Type != FSOType.RootDirectory) && tv.shouldTrawl(cd.obj0) && dopref == 0) {
+					if (transferMode == modes.Copy) {
+						if (! Directory.Exists(Path.GetDirectoryName(cd.obj1.Path))) {Directory.CreateDirectory(Path.GetDirectoryName(cd.obj1.Path));}
+						File.Copy(cd.obj0.Path, cd.obj1.Path, true);
+						File.SetAttributes(cd.obj1.Path, cd.obj0.Attributes);
+					} else if (transferMode == modes.Get) {
+						if (! Directory.Exists(Path.GetDirectoryName(cd.obj1.Path))) {Directory.CreateDirectory(Path.GetDirectoryName(cd.obj1.Path));}
+						using (var fsr = new FileStream(cd.obj0.Path, FileMode.Open, FileAccess.Read, FileShare.Read, 10485760)) {
+							using (var fsw = new FileStream(cd.obj1.Path, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read, 10485760)) {
+								var clenlft = fsr.Length;
+								while (clenlft > 0) {
+									var carr = new Byte[0];
+									if (clenlft > 10485760) {
+										carr = new Byte[10485760];
+										fsr.Read(carr, 0, carr.Length);
+										fsw.Write(carr,0,carr.Length);
+										clenlft -= 10485760;
+									} else {
+										carr = new Byte[clenlft];
+										fsr.Read(carr, 0, carr.Length);
+										fsw.Write(carr,0,carr.Length);
+										clenlft -= clenlft;
+									}
+								}
+							}
+						}
+						File.SetAttributes(cd.obj1.Path, cd.obj0.Attributes);
+					}
+				}
+				else if ((! cd.same) && cd.exist1 && (cd.obj1.Type != FSOType.Directory || cd.obj1.Type != FSOType.RootDirectory) && tv.shouldTrawl(cd.obj1) && dopref == 1) {
+					if (transferMode == modes.Copy) {
+						if (! Directory.Exists(Path.GetDirectoryName(cd.obj0.Path))) {Directory.CreateDirectory(Path.GetDirectoryName(cd.obj0.Path));}
+						File.Copy(cd.obj1.Path, cd.obj0.Path, true);
+						File.SetAttributes(cd.obj0.Path, cd.obj1.Attributes);
+					} else if (transferMode == modes.Get) {
+						if (! Directory.Exists(Path.GetDirectoryName(cd.obj0.Path))) {Directory.CreateDirectory(Path.GetDirectoryName(cd.obj0.Path));}
+						using (var fsr = new FileStream(cd.obj1.Path, FileMode.Open, FileAccess.Read, FileShare.Read, 10485760)) {
+							using (var fsw = new FileStream(cd.obj0.Path, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read, 10485760)) {
+								var clenlft = fsr.Length;
+								while (clenlft > 0) {
+									var carr = new Byte[0];
+									if (clenlft > 10485760) {
+										carr = new Byte[10485760];
+										fsr.Read(carr, 0, carr.Length);
+										fsw.Write(carr,0,carr.Length);
+										clenlft -= 10485760;
+									} else {
+										carr = new Byte[clenlft];
+										fsr.Read(carr, 0, carr.Length);
+										fsw.Write(carr,0,carr.Length);
+										clenlft -= clenlft;
+									}
+								}
+							}
+						}
+						File.SetAttributes(cd.obj0.Path, cd.obj1.Attributes);
+					}
+				}
+			}
+			tv = null;
+		}
+		
+		static void syncTo1() {
+			Console.WriteLine("Syncing from 1 to 0...");
+			var tv = new NominalRTM();
+			for (int i = 0; i < diffHolder.Count; i++) {
+				var cd = diffHolder[i];
+				var doit = true;
+				if (info) {Console.WriteLine("Syncing: " + cd.relPath);}
+				if ((! cd.same) && cd.exist1 && (cd.obj1.Type != FSOType.Directory || cd.obj1.Type != FSOType.RootDirectory) && tv.shouldTrawl(cd.obj1)) {
+					if (prompt) {
+						Console.WriteLine("Sync From 1 to 0: " + cd.relPath + " ?");
+						Console.WriteLine("[Else] Yes, [N] No, [X] Exit");
+						var rkey = Console.ReadKey();
+						Console.WriteLine();
+						if (rkey.Key == ConsoleKey.N)
+						{
+							doit = false;
+						}
+						else if (rkey.Key == ConsoleKey.X)
+						{
+							doit = false;
+							Environment.Exit(0);
+						}
+					}
+					if (transferMode == modes.Copy && doit) {
+						if (! Directory.Exists(Path.GetDirectoryName(cd.obj0.Path))) {Directory.CreateDirectory(Path.GetDirectoryName(cd.obj0.Path));}
+						File.Copy(cd.obj1.Path, cd.obj0.Path, true);
+						File.SetAttributes(cd.obj0.Path, cd.obj1.Attributes);
+					} else if (transferMode == modes.Get && doit) {
+						if (! Directory.Exists(Path.GetDirectoryName(cd.obj0.Path))) {Directory.CreateDirectory(Path.GetDirectoryName(cd.obj0.Path));}
+						using (var fsr = new FileStream(cd.obj1.Path, FileMode.Open, FileAccess.Read, FileShare.Read, 10485760)) {
+							using (var fsw = new FileStream(cd.obj0.Path, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read, 10485760)) {
+								var clenlft = fsr.Length;
+								while (clenlft > 0) {
+									var carr = new Byte[0];
+									if (clenlft > 10485760) {
+										carr = new Byte[10485760];
+										fsr.Read(carr, 0, carr.Length);
+										fsw.Write(carr,0,carr.Length);
+										clenlft -= 10485760;
+									} else {
+										carr = new Byte[clenlft];
+										fsr.Read(carr, 0, carr.Length);
+										fsw.Write(carr,0,carr.Length);
+										clenlft -= clenlft;
+									}
+								}
+							}
+						}
+						File.SetAttributes(cd.obj0.Path, cd.obj1.Attributes);
+					}
+				}
+			}
+			tv = null;
+		}
+		
+		static void syncTo2() {
+			Console.WriteLine("Syncing from 0 to 1...");
+			var tv = new NominalRTM();
+			for (int i = 0; i < diffHolder.Count; i++) {
+				var cd = diffHolder[i];
+				var doit = true;
+				if (info) {Console.WriteLine("Syncing: " + cd.relPath);}
+				if ((! cd.same) && cd.exist0 && (cd.obj0.Type != FSOType.Directory || cd.obj0.Type != FSOType.RootDirectory) && tv.shouldTrawl(cd.obj0)) {
+					if (prompt) {
+						Console.WriteLine("Sync From 0 to 1: " + cd.relPath + " ?");
+						Console.WriteLine("[Else] Yes, [N] No, [X] Exit");
+						var rkey = Console.ReadKey();
+						Console.WriteLine();
+						if (rkey.Key == ConsoleKey.N)
+						{
+							doit = false;
+						}
+						else if (rkey.Key == ConsoleKey.X)
+						{
+							doit = false;
+							Environment.Exit(0);
+						}
+					}
+					if (transferMode == modes.Copy && doit) {
+						if (! Directory.Exists(Path.GetDirectoryName(cd.obj1.Path))) {Directory.CreateDirectory(Path.GetDirectoryName(cd.obj1.Path));}
+						File.Copy(cd.obj0.Path, cd.obj1.Path, true);
+						File.SetAttributes(cd.obj1.Path, cd.obj0.Attributes);
+					} else if (transferMode == modes.Get && doit) {
+						if (! Directory.Exists(Path.GetDirectoryName(cd.obj1.Path))) {Directory.CreateDirectory(Path.GetDirectoryName(cd.obj1.Path));}
+						using (var fsr = new FileStream(cd.obj0.Path, FileMode.Open, FileAccess.Read, FileShare.Read, 10485760)) {
+							using (var fsw = new FileStream(cd.obj1.Path, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read, 10485760)) {
+								var clenlft = fsr.Length;
+								while (clenlft > 0) {
+									var carr = new Byte[0];
+									if (clenlft > 10485760) {
+										carr = new Byte[10485760];
+										fsr.Read(carr, 0, carr.Length);
+										fsw.Write(carr,0,carr.Length);
+										clenlft -= 10485760;
+									} else {
+										carr = new Byte[clenlft];
+										fsr.Read(carr, 0, carr.Length);
+										fsw.Write(carr,0,carr.Length);
+										clenlft -= clenlft;
+									}
+								}
+							}
+						}
+						File.SetAttributes(cd.obj1.Path, cd.obj0.Attributes);
+					}
+				}
+			}
+			tv = null;
 		}
 		
 		static void diff() {
@@ -330,11 +544,13 @@ namespace captainalm.integrator.syncer
 			for (int i = 0; i < side2.rowCount; i++) {
 				var obj0 = constructFSO(side2.get_block(0, i));
 				var obj1 = constructFSO(side2.get_block(1, i));
-				var rels = convertToRelative(new List<FSOBase>(new FSOBase[] {obj0, obj1}));
+				var rels = new List<string>();
+				rels.AddRange(convertToRelative(new List<FSOBase>(new FSOBase[] {obj0}), fbsdir0.Path));
+				rels.AddRange(convertToRelative(new List<FSOBase>(new FSOBase[] {obj1}), fbsdir1.Path));
 				if (rels[0] != rels[1]) {throw new InvalidOperationException("The relative paths are not equal.");}
 				var pref = -1;
-				(pref == -1) ? ((obj0.LastModified < obj1.LastModified) ? pref = 1 : ((obj0.LastModified > obj1.LastModified) ? pref = 0 : pref = -1)) : pref = -1;
-				(pref == -1) ? ((obj0.Size < obj1.Size) ? pref = 1 : ((obj0.Size > obj1.Size) ? pref = 0 : pref = -1)) : pref = -1;
+				pref = (pref == -1) ? ((obj0.LastModified < obj1.LastModified) ? 1 : ((obj0.LastModified > obj1.LastModified) ? 0 : -1)) : -1;
+				pref = (pref == -1) ? ((obj0.Size < obj1.Size) ? 1 : ((obj0.Size > obj1.Size) ? 0 : -1)) : -1;
 				if (obj0.Hash == obj1.Hash) {pref = -1;}
 				diffHolder.Add(new diffObj(rels[0], obj0, obj1, pref));
 			}
@@ -561,12 +777,12 @@ namespace captainalm.integrator.syncer
 		
 		static modes parseMode(String theArg) {
 			var toret = modes.Copy;
-			var c = theArg.ToLower()[i];
+			var c = theArg.ToLower();
 			switch (c) {
-				case 'c':
+				case "c":
 					toret = modes.Copy;
 					break;
-				case 'g':
+				case "g":
 					toret = modes.Get;
 					break;
 			}
@@ -643,11 +859,15 @@ namespace captainalm.integrator.syncer
 		public bool exist0;
 		public bool exist1;
 		public Int32 pref;
+		public bool same;
 		public diffObj(string pathIn,FSOBase o0, FSOBase o1, Int32 p) {
 			relPath = pathIn;
+			obj0 = o0;
+			obj1 = o1;
 			exist0 = o0.Exists;
 			exist1 = o1.Exists;
 			if (p >= -1 && p <= 1) {pref = p;} else {pref = -1;}
+			same = (o0.Hash == o1.Hash);
 		}
 	}
 	
