@@ -176,9 +176,12 @@ namespace captainalm.integrator.syncer
 	public class NominalRTM : IRecursiveTrawlerManager
 	{
 		protected Boolean prompt = false;
+		protected String basePath = "";
 
-		public NominalRTM() { prompt = false; }
-		public NominalRTM(Boolean doPrompt) { prompt = doPrompt; }
+		public NominalRTM() { prompt = false; basePath = "";}
+		public NominalRTM(String basePathIn) {prompt = false; basePath = basePathIn;}
+		public NominalRTM(Boolean doPrompt) { prompt = doPrompt; basePath = "";}
+		public NominalRTM(Boolean doPrompt, String basePathIn) { prompt = doPrompt; basePath = basePathIn;}
 
 		public virtual bool shouldTrawl(FSOBase c)
 		{
@@ -227,10 +230,10 @@ namespace captainalm.integrator.syncer
 		
 		protected virtual Boolean isPathContained(List<String> pathsIn, String pToCheck) {
 			var toret = false;
-			var pToCheckFP = Path.GetFullPath(pToCheck);
+			var pToCheckFP = (IsFullPath(pToCheck)) ? pToCheck : ConvertRelativePathToFullPath(basePath, pToCheck);
 			for (int i = 0; i < pathsIn.Count; i++) {
 				var c = pathsIn[i];
-				var cfp = Path.GetFullPath(c);
+				var cfp = (IsFullPath(c)) ? c : ConvertRelativePathToFullPath(basePath, c);
 				if (
 					pToCheck.IndexOf(c, StringComparison.OrdinalIgnoreCase) >= 0 ||
 					pToCheck.IndexOf(cfp, StringComparison.OrdinalIgnoreCase) >= 0 ||
@@ -260,6 +263,20 @@ namespace captainalm.integrator.syncer
 				}
 			}
 			return toret;
+		}
+		
+		protected bool IsFullPath(string pathIn)
+		{
+			if (string.IsNullOrWhiteSpace(pathIn) || pathIn.IndexOfAny(Path.GetInvalidPathChars()) != -1 || !Path.IsPathRooted(pathIn)) {return false;}
+			string pathInRoot = Path.GetPathRoot(pathIn);
+			if (pathInRoot.Length <= 2 && pathInRoot != "/") {return false;}
+			if (pathInRoot[0] != '\\' || pathInRoot[1] != '\\') {return true;}
+			return pathInRoot.Trim('\\').IndexOf('\\') != -1;
+		}
+		
+		protected string ConvertRelativePathToFullPath(string basePathIn, string pathIn)
+		{
+			if (IsFullPath(pathIn)) {return pathIn;} else {return Path.GetFullPath(Path.Combine(basePathIn, pathIn));}
 		}
 	}
 

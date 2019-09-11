@@ -20,6 +20,8 @@ namespace captainalm.integrator.syncer
 		public static StringArrayParser argsParser = null;
 		public static String sourcePath1 = "";
 		public static String sourcePath2 = "";
+		private static String _sourcePath1 = "";
+		private static String _sourcePath2 = "";
 		public static String integrationFile = "";
 		public static List<String> includedPaths = new List<String>();
 		public static List<String> excludedPaths = new List<String>();
@@ -148,28 +150,28 @@ namespace captainalm.integrator.syncer
 			if (argsParser.hasSwitchIgnoreCase("s1")) {
 				var switches = argsParser.get_argDataIgnoreCase("s1");
 				if (! object.ReferenceEquals(null, switches[0])) {
-					sourcePath1 = switches[0];
+					sourcePath1 = Path.GetFullPath(switches[0]);
 				} else {
 					throw new ArgumentException("s1");
 				}
 			} else if (argsParser.hasSwitchIgnoreCase("source1")) {
 				var switches = argsParser.get_argDataIgnoreCase("source1");
 				if (! object.ReferenceEquals(null, switches[0])) {
-					sourcePath1 = switches[0];
+					sourcePath1 = Path.GetFullPath(switches[0]);
 				} else {
 					throw new ArgumentException("source1");
 				}
 			} else if (argsParser.hasSwitchIgnoreCase("sd1")) {
 				var switches = argsParser.get_argDataIgnoreCase("sd1");
 				if (! object.ReferenceEquals(null, switches[0])) {
-					sourcePath1 = switches[0];
+					sourcePath1 = Path.GetFullPath(switches[0]);
 				} else {
 					throw new ArgumentException("sd1");
 				}
 			} else if (argsParser.hasSwitchIgnoreCase("sourcedirectory1")) {
 				var switches = argsParser.get_argDataIgnoreCase("sourcedirectory1");
 				if (! object.ReferenceEquals(null, switches[0])) {
-					sourcePath1 = switches[0];
+					sourcePath1 = Path.GetFullPath(switches[0]);
 				} else {
 					throw new ArgumentException("sourcedirectory1");
 				}
@@ -177,28 +179,28 @@ namespace captainalm.integrator.syncer
 			if (argsParser.hasSwitchIgnoreCase("s2")) {
 				var switches = argsParser.get_argDataIgnoreCase("s2");
 				if (! object.ReferenceEquals(null, switches[0])) {
-					sourcePath2 = switches[0];
+					sourcePath2 = Path.GetFullPath(switches[0]);
 				} else {
 					throw new ArgumentException("s2");
 				}
 			} else if (argsParser.hasSwitchIgnoreCase("source2")) {
 				var switches = argsParser.get_argDataIgnoreCase("source2");
 				if (! object.ReferenceEquals(null, switches[0])) {
-					sourcePath2 = switches[0];
+					sourcePath2 = Path.GetFullPath(switches[0]);
 				} else {
 					throw new ArgumentException("source2");
 				}
 			} else if (argsParser.hasSwitchIgnoreCase("sd2")) {
 				var switches = argsParser.get_argDataIgnoreCase("sd2");
 				if (! object.ReferenceEquals(null, switches[0])) {
-					sourcePath2 = switches[0];
+					sourcePath2 = Path.GetFullPath(switches[0]);
 				} else {
 					throw new ArgumentException("sd2");
 				}
 			} else if (argsParser.hasSwitchIgnoreCase("sourcedirectory2")) {
 				var switches = argsParser.get_argDataIgnoreCase("sourcedirectory2");
 				if (! object.ReferenceEquals(null, switches[0])) {
-					sourcePath2 = switches[0];
+					sourcePath2 = Path.GetFullPath(switches[0]);
 				} else {
 					throw new ArgumentException("sourcedirectory2");
 				}
@@ -279,11 +281,10 @@ namespace captainalm.integrator.syncer
 					}
 				}
 			}
-			
 		}
 		
 		static void runtime() {
-			Directory.SetCurrentDirectory(sourcePath1);
+			//Directory.SetCurrentDirectory(sourcePath1); // : FIX needed for relative mode
 			for (int i = 0; i < setup.Count; i++) {
 				var c = setup[i];
 				switch (c) {
@@ -314,7 +315,8 @@ namespace captainalm.integrator.syncer
 		
 		static void sync() {
 			Console.WriteLine("Syncing...");
-			var tv = new NominalRTM();
+			var tv0 = new NominalRTM(_sourcePath1);
+			var tv1 = new NominalRTM(_sourcePath2);
 			for (int i = 0; i < diffHolder.Count; i++) {
 				var cd = diffHolder[i];
 				if (info) {Console.WriteLine("Syncing: " + cd.relPath);}
@@ -323,30 +325,29 @@ namespace captainalm.integrator.syncer
 					Console.WriteLine("Sync: " + cd.relPath + " ?");
 					var pref = (cd.pref == -1) ? "Skip" : cd.pref.ToString();
 					Console.WriteLine("Prefered Block: " + pref);
-					Console.WriteLine("[Else] Skip, [0] Sync To 0, [1] Sync To 1, [P] Sync To Prefered, [X] Exit");
+					Console.WriteLine("[Else] Skip, [0] Sync To 0, [1] Sync To 1, [P] Sync From Prefered, [X] Exit");
 					var rkey = Console.ReadKey();
 					Console.WriteLine();
-					if (rkey.Key == ConsoleKey.D0 )
-					{
-						dopref = 0;
-					}
-					else if (rkey.Key == ConsoleKey.D1 )
-					{
-						dopref = 1;
-					}
-					else if (rkey.Key == ConsoleKey.P )
-					{
-						dopref = cd.pref;
-					}
-					else if (rkey.Key == ConsoleKey.X)
-					{
-						dopref = -1;
-						Environment.Exit(0);
-					} else {
-						dopref = -1;
+					switch (rkey.Key) {
+						case ConsoleKey.D0:
+							dopref = 0;
+							break;
+						case ConsoleKey.D1:
+							dopref = 1;
+							break;
+						case ConsoleKey.P:
+							dopref = cd.pref;
+							break;
+						case ConsoleKey.X:
+							dopref = -1;
+							Environment.Exit(0);
+							break;
+						default:
+							dopref = -1;
+							break;
 					}
 				}
-				if ((! cd.same) && cd.exist0 && (cd.obj0.Type != FSOType.Directory || cd.obj0.Type != FSOType.RootDirectory) && tv.shouldTrawl(cd.obj0) && dopref == 0) {
+				if ((! cd.same) && cd.exist0 && (cd.obj0.Type != FSOType.Directory && cd.obj0.Type != FSOType.RootDirectory) && tv0.shouldTrawl(cd.obj0) && dopref == 0) {
 					if (transferMode == modes.Copy) {
 						if (! Directory.Exists(Path.GetDirectoryName(cd.obj1.Path))) {Directory.CreateDirectory(Path.GetDirectoryName(cd.obj1.Path));}
 						File.Copy(cd.obj0.Path, cd.obj1.Path, true);
@@ -375,7 +376,7 @@ namespace captainalm.integrator.syncer
 						File.SetAttributes(cd.obj1.Path, cd.obj0.Attributes);
 					}
 				}
-				else if ((! cd.same) && cd.exist1 && (cd.obj1.Type != FSOType.Directory || cd.obj1.Type != FSOType.RootDirectory) && tv.shouldTrawl(cd.obj1) && dopref == 1) {
+				else if ((! cd.same) && cd.exist1 && (cd.obj1.Type != FSOType.Directory && cd.obj1.Type != FSOType.RootDirectory) && tv1.shouldTrawl(cd.obj1) && dopref == 1) {
 					if (transferMode == modes.Copy) {
 						if (! Directory.Exists(Path.GetDirectoryName(cd.obj0.Path))) {Directory.CreateDirectory(Path.GetDirectoryName(cd.obj0.Path));}
 						File.Copy(cd.obj1.Path, cd.obj0.Path, true);
@@ -403,19 +404,24 @@ namespace captainalm.integrator.syncer
 						}
 						File.SetAttributes(cd.obj0.Path, cd.obj1.Attributes);
 					}
+				} else if (((! cd.same) && cd.exist0 && (cd.obj0.Type == FSOType.Directory || cd.obj0.Type == FSOType.RootDirectory) && tv0.shouldTrawl(cd.obj0) && dopref == 0)) {
+					if (! Directory.Exists(cd.obj1.Path)) {Directory.CreateDirectory(cd.obj1.Path);}
+				} else if (((! cd.same) && cd.exist1 && (cd.obj1.Type == FSOType.Directory || cd.obj1.Type == FSOType.RootDirectory) && tv1.shouldTrawl(cd.obj1) && dopref == 1)) {
+					if (! Directory.Exists(cd.obj0.Path)) {Directory.CreateDirectory(cd.obj0.Path);}
 				}
 			}
-			tv = null;
+			tv0 = null;
+			tv1 = null;
 		}
 		
 		static void syncTo1() {
 			Console.WriteLine("Syncing from 1 to 0...");
-			var tv = new NominalRTM();
+			var tv1 = new NominalRTM(_sourcePath2);
 			for (int i = 0; i < diffHolder.Count; i++) {
 				var cd = diffHolder[i];
 				var doit = true;
 				if (info) {Console.WriteLine("Syncing: " + cd.relPath);}
-				if ((! cd.same) && cd.exist1 && (cd.obj1.Type != FSOType.Directory || cd.obj1.Type != FSOType.RootDirectory) && tv.shouldTrawl(cd.obj1)) {
+				if ((! cd.same) && cd.exist1 && tv1.shouldTrawl(cd.obj1)) {
 					if (prompt) {
 						Console.WriteLine("Sync From 1 to 0: " + cd.relPath + " ?");
 						Console.WriteLine("[Else] Yes, [N] No, [X] Exit");
@@ -431,11 +437,11 @@ namespace captainalm.integrator.syncer
 							Environment.Exit(0);
 						}
 					}
-					if (transferMode == modes.Copy && doit) {
+					if (transferMode == modes.Copy && doit && (cd.obj1.Type != FSOType.Directory && cd.obj1.Type != FSOType.RootDirectory)) {
 						if (! Directory.Exists(Path.GetDirectoryName(cd.obj0.Path))) {Directory.CreateDirectory(Path.GetDirectoryName(cd.obj0.Path));}
 						File.Copy(cd.obj1.Path, cd.obj0.Path, true);
 						File.SetAttributes(cd.obj0.Path, cd.obj1.Attributes);
-					} else if (transferMode == modes.Get && doit) {
+					} else if (transferMode == modes.Get && doit && (cd.obj1.Type != FSOType.Directory && cd.obj1.Type != FSOType.RootDirectory)) {
 						if (! Directory.Exists(Path.GetDirectoryName(cd.obj0.Path))) {Directory.CreateDirectory(Path.GetDirectoryName(cd.obj0.Path));}
 						using (var fsr = new FileStream(cd.obj1.Path, FileMode.Open, FileAccess.Read, FileShare.Read, 10485760)) {
 							using (var fsw = new FileStream(cd.obj0.Path, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read, 10485760)) {
@@ -457,20 +463,22 @@ namespace captainalm.integrator.syncer
 							}
 						}
 						File.SetAttributes(cd.obj0.Path, cd.obj1.Attributes);
+					} else if (((cd.obj1.Type == FSOType.Directory || cd.obj1.Type == FSOType.RootDirectory) && doit)) {
+						if (! Directory.Exists(cd.obj0.Path)) {Directory.CreateDirectory(cd.obj0.Path);}
 					}
 				}
 			}
-			tv = null;
+			tv1 = null;
 		}
 		
 		static void syncTo2() {
 			Console.WriteLine("Syncing from 0 to 1...");
-			var tv = new NominalRTM();
+			var tv0 = new NominalRTM(_sourcePath1);
 			for (int i = 0; i < diffHolder.Count; i++) {
 				var cd = diffHolder[i];
 				var doit = true;
 				if (info) {Console.WriteLine("Syncing: " + cd.relPath);}
-				if ((! cd.same) && cd.exist0 && (cd.obj0.Type != FSOType.Directory || cd.obj0.Type != FSOType.RootDirectory) && tv.shouldTrawl(cd.obj0)) {
+				if ((! cd.same) && cd.exist0 && tv0.shouldTrawl(cd.obj0)) {
 					if (prompt) {
 						Console.WriteLine("Sync From 0 to 1: " + cd.relPath + " ?");
 						Console.WriteLine("[Else] Yes, [N] No, [X] Exit");
@@ -486,11 +494,11 @@ namespace captainalm.integrator.syncer
 							Environment.Exit(0);
 						}
 					}
-					if (transferMode == modes.Copy && doit) {
+					if (transferMode == modes.Copy && doit && (cd.obj0.Type != FSOType.Directory && cd.obj0.Type != FSOType.RootDirectory)) {
 						if (! Directory.Exists(Path.GetDirectoryName(cd.obj1.Path))) {Directory.CreateDirectory(Path.GetDirectoryName(cd.obj1.Path));}
 						File.Copy(cd.obj0.Path, cd.obj1.Path, true);
 						File.SetAttributes(cd.obj1.Path, cd.obj0.Attributes);
-					} else if (transferMode == modes.Get && doit) {
+					} else if (transferMode == modes.Get && doit && (cd.obj0.Type != FSOType.Directory && cd.obj0.Type != FSOType.RootDirectory)) {
 						if (! Directory.Exists(Path.GetDirectoryName(cd.obj1.Path))) {Directory.CreateDirectory(Path.GetDirectoryName(cd.obj1.Path));}
 						using (var fsr = new FileStream(cd.obj0.Path, FileMode.Open, FileAccess.Read, FileShare.Read, 10485760)) {
 							using (var fsw = new FileStream(cd.obj1.Path, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read, 10485760)) {
@@ -512,10 +520,12 @@ namespace captainalm.integrator.syncer
 							}
 						}
 						File.SetAttributes(cd.obj1.Path, cd.obj0.Attributes);
+					} else if (((cd.obj0.Type == FSOType.Directory || cd.obj0.Type == FSOType.RootDirectory) && doit)) {
+						if (! Directory.Exists(cd.obj1.Path)) {Directory.CreateDirectory(cd.obj1.Path);}
 					}
 				}
 			}
-			tv = null;
+			tv0 = null;
 		}
 		
 		static void diff() {
@@ -529,10 +539,10 @@ namespace captainalm.integrator.syncer
 			int[] indx1 = null;
 			for (int i = 0; i < indxs.Length; i++) {
 				var c = indxs[i];
-				if (c[1] == 0 && ! indx0d) {
+				if (c[0] == 0 && ! indx0d) {
 					indx0 = c;
 					indx0d = true;
-				} else if (c[1] == 1 && !indx1d) {
+				} else if (c[0] == 1 && !indx1d) {
 					indx1 = c;
 					indx1d = true;
 				}
@@ -540,17 +550,24 @@ namespace captainalm.integrator.syncer
 			if (! (indx0d) || ! (indx1d)) {throw new InvalidOperationException("One of the blocks does not have a root directory.");}
 			var fbsdir0 = constructFSO(side1.get_block(indx0[0], indx0[1]));
 			var fbsdir1 = constructFSO(side1.get_block(indx1[0], indx1[1]));
-			side2 = unify(createSyncMap(fbsdir0.Path),createSyncMap(fbsdir1.Path), fbsdir0.Path, fbsdir1.Path);
+			_sourcePath1 = Path.GetFullPath(fbsdir0.Path);
+			_sourcePath2 = Path.GetFullPath(fbsdir1.Path);
+			fbsdir0 = new FSODirectory(_sourcePath1, FSOType.RootDirectory);
+			fbsdir0.update();
+			fbsdir1 = new FSODirectory(_sourcePath2, FSOType.RootDirectory);
+			fbsdir1.update();
+			side2 = unify(createSyncMap(_sourcePath1, _sourcePath1),createSyncMap(_sourcePath2, _sourcePath2), _sourcePath1, _sourcePath2);
 			for (int i = 0; i < side2.rowCount; i++) {
 				var obj0 = constructFSO(side2.get_block(0, i));
 				var obj1 = constructFSO(side2.get_block(1, i));
+				obj1.update();
 				var rels = new List<string>();
-				rels.AddRange(convertToRelative(new List<FSOBase>(new FSOBase[] {obj0}), fbsdir0.Path));
-				rels.AddRange(convertToRelative(new List<FSOBase>(new FSOBase[] {obj1}), fbsdir1.Path));
+				rels.AddRange(convertToRelative(new List<FSOBase>(new FSOBase[] {obj0}), _sourcePath1));
+				rels.AddRange(convertToRelative(new List<FSOBase>(new FSOBase[] {obj1}), _sourcePath2));
 				if (rels[0] != rels[1]) {throw new InvalidOperationException("The relative paths are not equal.");}
 				var pref = -1;
-				pref = (pref == -1) ? ((obj0.LastModified < obj1.LastModified) ? 1 : ((obj0.LastModified > obj1.LastModified) ? 0 : -1)) : -1;
-				pref = (pref == -1) ? ((obj0.Size < obj1.Size) ? 1 : ((obj0.Size > obj1.Size) ? 0 : -1)) : -1;
+				pref = (pref == -1) ? ((obj0.LastModified < obj1.LastModified) ? 1 : ((obj0.LastModified > obj1.LastModified) ? 0 : pref)) : pref;
+				pref = (pref == -1) ? ((obj0.Size < obj1.Size) ? 1 : ((obj0.Size > obj1.Size) ? 0 : pref)) : pref;
 				if (obj0.Hash == obj1.Hash) {pref = -1;}
 				diffHolder.Add(new diffObj(rels[0], obj0, obj1, pref));
 			}
@@ -558,7 +575,7 @@ namespace captainalm.integrator.syncer
 		
 		static void create() {
 			Console.WriteLine("Creating...");
-			side1 = unify(createSyncMap(sourcePath1),createSyncMap(sourcePath2), sourcePath1, sourcePath2);
+			side1 = unify(createSyncMap(sourcePath1, sourcePath1),createSyncMap(sourcePath2, sourcePath2), sourcePath1, sourcePath2);
 			if (serializeIntegration) {
 				var sav = new BinaryLoaderSaver();
 				side1.save(sav);
@@ -599,10 +616,10 @@ namespace captainalm.integrator.syncer
 			}
 		}
 		
-		static List<FSOBase> createSyncMap(String pathIn) {
+		static List<FSOBase> createSyncMap(String pathIn, String basePathIn) {
 			if (info) {Console.WriteLine("Creating Sync Map for: " + pathIn);}
 			var baseDir = new FSODirectory(pathIn, FSOType.RootDirectory) { Info = info };
-			var subObjs = baseDir.trawlRecursively(new NominalRTM(prompt), false);
+			var subObjs = baseDir.trawlRecursively(new NominalRTM(prompt, basePathIn), false);
 			baseDir.update();
 			var objs = new List<FSOBase>();
 			objs.Add(baseDir);
@@ -613,8 +630,9 @@ namespace captainalm.integrator.syncer
 		static List<String> convertToRelative(List<FSOBase> fsobjsIn, String baseIn) {
 			var toret = new List<String>();
 			for (int i = 0; i < fsobjsIn.Count; i++) {
-				if (info) {Console.WriteLine("Converting to relative: " + fsobjsIn[i]);}
+				if (info) {Console.WriteLine("Converting to relative: " + fsobjsIn[i].Path);}
 				toret.Add(fsobjsIn[i].Path.Replace(baseIn, ""));
+				if (toret[i].StartsWith("/") || toret[i].StartsWith("\\")) {toret[i] = toret[i].Substring(1, toret[i].Length - 1);}
 			}
 			return toret;
 		}
@@ -664,9 +682,11 @@ namespace captainalm.integrator.syncer
 		static FSOBase constructFSO(IElement[] elementsIn) {
 			var fsot = (FSOType)((FSOTypeElement)elementsIn[0]).HeldElement;
 			if (fsot == FSOType.RootDirectory || fsot == FSOType.Directory) {
-				return new FSODirectory(elementsIn) { Info = info };
+				var ex = Directory.Exists((String)((StringElement)elementsIn[1]).HeldElement);
+				return new FSODirectory(elementsIn) { Info = info , Exists = ex };
 			} else if (fsot == FSOType.RootFile || fsot == FSOType.File) {
-				return new FSOFile(elementsIn) { Info = info };
+				var ex = File.Exists((String)((StringElement)elementsIn[1]).HeldElement);
+				return new FSOFile(elementsIn) { Info = info , Exists = ex };
 			}
 			return null;
 		}

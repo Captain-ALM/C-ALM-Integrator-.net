@@ -161,6 +161,9 @@ namespace captainalm.integrator.syncer
 			get {
 				return exists;
 			}
+        	set {
+        		exists = value;
+        	}
 		}
 		
 		public abstract FileAttributes Attributes {get;}

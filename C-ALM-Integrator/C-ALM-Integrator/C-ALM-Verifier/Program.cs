@@ -131,28 +131,28 @@ namespace captainalm.integrator.verifier
 			if (argsParser.hasSwitchIgnoreCase("s")) {
 				var switches = argsParser.get_argDataIgnoreCase("s");
 				if (! object.ReferenceEquals(null, switches[0])) {
-					sourcePath = switches[0];
+					sourcePath = Path.GetFullPath(switches[0]);
 				} else {
 					throw new ArgumentException("s");
 				}
 			} else if (argsParser.hasSwitchIgnoreCase("source")) {
 				var switches = argsParser.get_argDataIgnoreCase("source");
 				if (! object.ReferenceEquals(null, switches[0])) {
-					sourcePath = switches[0];
+					sourcePath = Path.GetFullPath(switches[0]);
 				} else {
 					throw new ArgumentException("source");
 				}
 			} else if (argsParser.hasSwitchIgnoreCase("sd")) {
 				var switches = argsParser.get_argDataIgnoreCase("sd");
 				if (! object.ReferenceEquals(null, switches[0])) {
-					sourcePath = switches[0];
+					sourcePath = Path.GetFullPath(switches[0]);
 				} else {
 					throw new ArgumentException("sd");
 				}
 			} else if (argsParser.hasSwitchIgnoreCase("sourcedirectory")) {
 				var switches = argsParser.get_argDataIgnoreCase("sourcedirectory");
 				if (! object.ReferenceEquals(null, switches[0])) {
-					sourcePath = switches[0];
+					sourcePath = Path.GetFullPath(switches[0]);
 				} else {
 					throw new ArgumentException("sourcedirectory");
 				}
@@ -233,11 +233,10 @@ namespace captainalm.integrator.verifier
 					}
 				}
 			}
-			
 		}
 		
 		static void runtime() {
-			Directory.SetCurrentDirectory(sourcePath);
+			//Directory.SetCurrentDirectory(sourcePath); // : FIX needed for relative mode
 			for (int i = 0; i < setup.Count; i++) {
 				var c = setup[i];
 				switch (c) {
@@ -260,7 +259,7 @@ namespace captainalm.integrator.verifier
 		static void create() {
 			Console.WriteLine("Creating...");
             var baseDir = new FSODirectory(sourcePath, FSOType.RootDirectory) { Info = info };
-			var subObjs = baseDir.trawlRecursively(new NominalRTM(prompt), false);
+			var subObjs = baseDir.trawlRecursively(new NominalRTM(prompt, sourcePath), false);
 			baseDir.update();
 			var objs = new List<FSOBase>();
 			objs.Add(baseDir);
@@ -304,15 +303,17 @@ namespace captainalm.integrator.verifier
 			var bsObjs2 = new List<FSOFile>();
 			for (int i = 0; i < indxs.Length; i++) {
 				var cindxs = indxs[i];
-                bsObjs.Add(new FSODirectory(side1.get_block(cindxs[0], cindxs[1])) { Info = info });
+				var fpth = Path.GetFullPath(new FSODirectory(side1.get_block(cindxs[0], cindxs[1])).Path);
+                bsObjs.Add(new FSODirectory(fpth ,FSOType.RootDirectory) { Info = info });
 			}
 			for (int i = 0; i < indxs2.Length; i++) {
 				var cindxs = indxs2[i];
-                bsObjs2.Add(new FSOFile(side1.get_block(cindxs[0], cindxs[1])) { Info = info });
+				var fpth = Path.GetFullPath(new FSODirectory(side1.get_block(cindxs[0], cindxs[1])).Path);
+                bsObjs2.Add(new FSOFile(fpth, FSOType.RootFile) { Info = info });
 			}
 			var objs2Add = new List<FSOBase>();
 			for (int i = 0; i < bsObjs.Count; i++) {
-				objs2Add.AddRange(bsObjs[i].trawlRecursively(new NominalRTM(prompt), false));
+				objs2Add.AddRange(bsObjs[i].trawlRecursively(new NominalRTM(prompt, bsObjs[i].Path), false));
 				bsObjs[i].update();
 			}
 			for (int i = 0; i < bsObjs2.Count; i++) {
@@ -379,9 +380,11 @@ namespace captainalm.integrator.verifier
 		static FSOBase constructFSO(IElement[] elementsIn) {
 			var fsot = (FSOType)((FSOTypeElement)elementsIn[0]).HeldElement;
 			if (fsot == FSOType.RootDirectory || fsot == FSOType.Directory) {
-                return new FSODirectory(elementsIn) { Info = info };
+				var ex = Directory.Exists((String)((StringElement)elementsIn[1]).HeldElement);
+				return new FSODirectory(elementsIn) { Info = info , Exists = ex };
 			} else if (fsot == FSOType.RootFile || fsot == FSOType.File) {
-                return new FSOFile(elementsIn) { Info = info };
+				var ex = File.Exists((String)((StringElement)elementsIn[1]).HeldElement);
+				return new FSOFile(elementsIn) { Info = info , Exists = ex };
 			}
 			return null;
 		}
