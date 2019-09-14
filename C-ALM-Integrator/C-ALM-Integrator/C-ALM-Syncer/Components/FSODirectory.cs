@@ -177,6 +177,7 @@ namespace captainalm.integrator.syncer
 	{
 		protected Boolean prompt = false;
 		protected String basePath = "";
+		protected List<String> includedBasePaths = new List<String>();
 
 		public NominalRTM() { prompt = false; basePath = "";}
 		public NominalRTM(String basePathIn) {prompt = false; basePath = basePathIn;}
@@ -209,10 +210,14 @@ namespace captainalm.integrator.syncer
 			{
 				res = Program.includedPaths.Count > 0 && isPathContained(Program.includedPaths, c.Path);
 			}
-			if (res && prompt)
+			var skpp = false;
+			if (res) {
+				skpp = isPathContained(includedBasePaths, c.Path);
+			}
+			if (res && prompt && ! skpp)
 			{
 				Console.WriteLine("Include: " + c.Path + " ?");
-				Console.WriteLine("[Else] Include, [E] Exclude, [X] Exit");
+				Console.WriteLine("[Else] Include, " + ((c.Type == FSOType.RootDirectory || c.Type == FSOType.Directory) ? "[I] Include All Sub Objects, " : "") + "[E] Exclude, [X] Exit");
 				var rkey = Console.ReadKey();
 				Console.WriteLine();
 				if (rkey.Key == ConsoleKey.E)
@@ -223,9 +228,29 @@ namespace captainalm.integrator.syncer
 				{
 					res = false;
 					Environment.Exit(0);
+				} else if (rkey.Key == ConsoleKey.I && (c.Type == FSOType.RootDirectory || c.Type == FSOType.Directory)) {
+					addIncludedBasePath(c.Path);
 				}
 			}
 			return res;
+		}
+		
+		public virtual void addIncludedBasePath(String pathIn) {
+			var pathInFP = (IsFullPath(pathIn)) ? pathIn : ConvertRelativePathToFullPath(basePath, pathIn);
+			if (! isPathContained(includedBasePaths, pathInFP)) {
+				includedBasePaths.Add(pathInFP);
+			}
+		}
+		
+		public virtual void removeIncludedBasePath(String pathIn) {
+			var pathInFP = (IsFullPath(pathIn)) ? pathIn : ConvertRelativePathToFullPath(basePath, pathIn);
+			if (isPathContained(includedBasePaths, pathInFP)) {
+				includedBasePaths.Remove(pathInFP);
+			}
+		}
+		
+		public virtual void clearIncludedBasePaths() {
+			includedBasePaths.Clear();
 		}
 		
 		protected virtual Boolean isPathContained(List<String> pathsIn, String pToCheck) {
@@ -234,6 +259,7 @@ namespace captainalm.integrator.syncer
 			for (int i = 0; i < pathsIn.Count; i++) {
 				var c = pathsIn[i];
 				var cfp = (IsFullPath(c)) ? c : ConvertRelativePathToFullPath(basePath, c);
+				var cfpisfile = File.Exists(cfp);
 				if (
 					pToCheck.IndexOf(c, StringComparison.OrdinalIgnoreCase) >= 0 ||
 					pToCheck.IndexOf(cfp, StringComparison.OrdinalIgnoreCase) >= 0 ||
@@ -243,7 +269,10 @@ namespace captainalm.integrator.syncer
 				{
 					toret = true;
 					break;
-				} else if (pToCheckFP.StartsWith(Path.GetDirectoryName(cfp), StringComparison.OrdinalIgnoreCase)) {
+				} else if ((cfpisfile) && pToCheckFP.StartsWith(Path.GetDirectoryName(cfp), StringComparison.OrdinalIgnoreCase)) {
+					toret = true;
+					break;
+				} else if ((! cfpisfile) && pToCheckFP.StartsWith(cfp, StringComparison.OrdinalIgnoreCase)) {
 					toret = true;
 					break;
 				}
